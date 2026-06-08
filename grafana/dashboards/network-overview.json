@@ -1,17 +1,50 @@
 {
-  "annotations": {
-    "list": []
-  },
+  "id": null,
+  "uid": "network-overview",
+  "title": "Network Overview",
+  "tags": [
+    "network",
+    "snmp",
+    "prometheus"
+  ],
+  "timezone": "",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "style": "dark",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "links": [],
   "liveNow": false,
+  "links": [],
+  "__inputs": [],
+  "__requires": [],
+  "annotations": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "templating": {
+    "list": []
+  },
   "panels": [
     {
+      "id": 1,
+      "title": "SNMP device status",
+      "type": "stat",
+      "pluginVersion": "10.0.0",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 0
       },
       "fieldConfig": {
         "defaults": {
@@ -32,13 +65,6 @@
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 0
-      },
-      "id": 1,
       "options": {
         "colorMode": "background",
         "graphMode": "area",
@@ -53,7 +79,6 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "10.0.0",
       "targets": [
         {
           "datasource": {
@@ -64,14 +89,21 @@
           "legendFormat": "{{ instance }}",
           "refId": "A"
         }
-      ],
-      "title": "SNMP device status",
-      "type": "stat"
+      ]
     },
     {
+      "id": 2,
+      "title": "Interface traffic",
+      "type": "timeseries",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 8,
+        "y": 0
       },
       "fieldConfig": {
         "defaults": {
@@ -89,13 +121,6 @@
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 16,
-        "x": 8,
-        "y": 0
-      },
-      "id": 2,
       "options": {
         "legend": {
           "calcs": [
@@ -130,14 +155,21 @@
           "legendFormat": "{{ instance }} {{ ifName }} outbound",
           "refId": "B"
         }
-      ],
-      "title": "Interface traffic",
-      "type": "timeseries"
+      ]
     },
     {
+      "id": 3,
+      "title": "Interface errors",
+      "type": "timeseries",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
       },
       "fieldConfig": {
         "defaults": {
@@ -163,13 +195,6 @@
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      },
-      "id": 3,
       "options": {
         "legend": {
           "calcs": [
@@ -203,14 +228,21 @@
           "legendFormat": "{{ instance }} {{ ifName }} outbound errors",
           "refId": "B"
         }
-      ],
-      "title": "Interface errors",
-      "type": "timeseries"
+      ]
     },
     {
+      "id": 4,
+      "title": "Interface discards",
+      "type": "timeseries",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
       },
       "fieldConfig": {
         "defaults": {
@@ -236,13 +268,6 @@
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
-      },
-      "id": 4,
       "options": {
         "legend": {
           "calcs": [
@@ -276,30 +301,7 @@
           "legendFormat": "{{ instance }} {{ ifName }} outbound discards",
           "refId": "B"
         }
-      ],
-      "title": "Interface discards",
-      "type": "timeseries"
+      ]
     }
-  ],
-  "refresh": "30s",
-  "schemaVersion": 38,
-  "style": "dark",
-  "tags": [
-    "network",
-    "snmp",
-    "prometheus"
-  ],
-  "templating": {
-    "list": []
-  },
-  "time": {
-    "from": "now-6h",
-    "to": "now"
-  },
-  "timepicker": {},
-  "timezone": "",
-  "title": "Network Overview",
-  "uid": "network-overview",
-  "version": 1,
-  "weekStart": ""
+  ]
 }

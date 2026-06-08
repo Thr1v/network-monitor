@@ -12,20 +12,25 @@ scrape_configs:
           - network-prometheus:9090
 
   - job_name: snmp-switches
+    scrape_timeout: 30s
     metrics_path: /snmp
     params:
       module:
         - if_mib
+      auth:
+        - public_v2
     static_configs:
       - targets:
           - 172.31.1.5
           - 172.31.1.6
           - 172.31.1.7
     relabel_configs:
-      - source_labels: [__address__]
+      - source_labels:
+          - __address__
         target_label: __param_target
 
-      - source_labels: [__param_target]
+      - source_labels:
+          - __param_target
         target_label: instance
 
       - target_label: __address__
