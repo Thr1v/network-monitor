@@ -1,0 +1,56 @@
+groups:
+  - name: network-alerts
+    rules:
+      - alert: PrometheusTargetDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus target is down"
+          description: "Target {{ $labels.instance }} from job {{ $labels.job }} has been down for more than 5 minutes."
+
+      - alert: NetworkDeviceDown
+        expr: up{job="snmp-switches"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Network device is unreachable"
+          description: "SNMP target {{ $labels.instance }} has been unreachable for more than 5 minutes."
+
+      - alert: InterfaceHighInboundUsage
+        expr: rate(ifHCInOctets[5m]) * 8 > 800000000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High inbound interface usage"
+          description: "Interface {{ $labels.ifName }} on {{ $labels.instance }} has high inbound traffic for more than 10 minutes."
+
+      - alert: InterfaceHighOutboundUsage
+        expr: rate(ifHCOutOctets[5m]) * 8 > 800000000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High outbound interface usage"
+          description: "Interface {{ $labels.ifName }} on {{ $labels.instance }} has high outbound traffic for more than 10 minutes."
+
+      - alert: InterfaceErrorsIncreasing
+        expr: increase(ifInErrors[15m]) > 10 or increase(ifOutErrors[15m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Interface errors increasing"
+          description: "Interface {{ $labels.ifName }} on {{ $labels.instance }} is reporting increasing errors."
+
+      - alert: InterfaceDiscardsIncreasing
+        expr: increase(ifInDiscards[15m]) > 10 or increase(ifOutDiscards[15m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Interface discards increasing"
+          description: "Interface {{ $labels.ifName }} on {{ $labels.instance }} is reporting increasing packet discards."

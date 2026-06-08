@@ -21,7 +21,7 @@ services:
     container_name: network-prometheus
     restart: unless-stopped
     ports:
-      - "${PROMETHEUS_PORT}:9090"
+      - "127.0.0.1:${PROMETHEUS_PORT}:9090"
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
@@ -39,7 +39,7 @@ services:
     container_name: network-snmp-exporter
     restart: unless-stopped
     ports:
-      - "${SNMP_EXPORTER_PORT}:9116"
+      - "127.0.0.1:${SNMP_EXPORTER_PORT}:9116"
     volumes:
       - ./snmp-exporter/snmp.yml:/etc/snmp_exporter/snmp.yml:ro
     networks:
