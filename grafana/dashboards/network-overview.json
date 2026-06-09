@@ -5,8 +5,8 @@
     "name": "network-overview",
     "namespace": "default",
     "uid": "80071ccc-b5a9-471a-9b65-b64892a0559f",
-    "resourceVersion": "1780928987983998",
-    "generation": 8,
+    "resourceVersion": "1780932971116005",
+    "generation": 12,
     "creationTimestamp": "2026-06-08T10:23:22Z",
     "labels": {
       "grafana.app/deprecatedInternalID": "1281243847823360"
@@ -16,11 +16,11 @@
       "grafana.app/folder": "dfoia2u8hnchsb",
       "grafana.app/managedBy": "classic-file-provisioning",
       "grafana.app/managerId": "Network Dashboards",
-      "grafana.app/sourceChecksum": "8b19c9e92cfa562735005ccb5acd8741",
+      "grafana.app/sourceChecksum": "77d31fdda47c9d68ef7496c582b72e01",
       "grafana.app/sourcePath": "/var/lib/grafana/dashboards/network-overview.json",
-      "grafana.app/sourceTimestamp": "1780928977000",
+      "grafana.app/sourceTimestamp": "1780932960000",
       "grafana.app/updatedBy": "access-policy:service",
-      "grafana.app/updatedTimestamp": "2026-06-08T14:29:47Z",
+      "grafana.app/updatedTimestamp": "2026-06-08T15:36:11Z",
       "grafana.app/folderTitle": "Network Monitoring",
       "grafana.app/folderUrl": "/dashboards/f/dfoia2u8hnchsb/network-monitoring"
     }
@@ -86,7 +86,7 @@
           "description": "",
           "id": 1,
           "links": [],
-          "title": "SNMP device status",
+          "title": "Switch device status",
           "vizConfig": {
             "group": "stat",
             "kind": "VizConfig",
@@ -150,8 +150,8 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "(rate(ifHCInOctets{job=\"snmp-switches\", device_name=~\".+\"}[5m]) * 8) / 1000000",
-                        "legendFormat": "{{ device_name }} {{ ifName }} inbound",
+                        "expr": "topk(10, (rate(ifHCInOctets{job=\"snmp-switches\", device_name=~\"$device\"}[5m]) * 8) / 1000000)",
+                        "legendFormat": "{{device_name}} {{ ifName }} inbound",
                         "range": true
                       },
                       "version": "v0"
@@ -171,8 +171,8 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "(rate(ifHCOutOctets{job=\"snmp-switches\", device_name=~\".+\"}[5m]) * 8) / 1000000",
-                        "legendFormat": "{{ device_name }} {{ ifName }} outbound",
+                        "expr": "topk(10, (rate(ifHCOutOctets{job=\"snmp-switches\", device_name=~\"$device\"}[5m]) * 8) / 1000000)",
+                        "legendFormat": "{{device_name}} {{ ifName }} outbound",
                         "range": true
                       },
                       "version": "v0"
@@ -289,8 +289,8 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "increase(ifInErrors{job=\"snmp-switches\", device_name=~\".+\"}[15m])",
-                        "legendFormat": "{{ device_name }} {{ ifName }} inbound errors",
+                        "expr": "increase(ifInErrors{job=\"snmp-switches\", device_name=~\"$device\"}[15m])",
+                        "legendFormat": "{{device_name}} {{ ifName }} inbound errors",
                         "range": true
                       },
                       "version": "v0"
@@ -310,8 +310,8 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "increase(ifOutErrors{job=\"snmp-switches\", device_name=~\".+\"}[15m])",
-                        "legendFormat": "{{ device_name }} {{ ifName }} outbound errors",
+                        "expr": "increase(ifOutErrors{job=\"snmp-switches\", device_name=~\"$device\"}[15m])",
+                        "legendFormat": "{{device_name}} {{ ifName }} outbound errors",
                         "range": true
                       },
                       "version": "v0"
@@ -435,8 +435,8 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "increase(ifInDiscards{job=\"snmp-switches\", device_name=~\".+\"}[15m])",
-                        "legendFormat": "{{ device_name }} {{ ifName }} inbound discards",
+                        "expr": "increase(ifInDiscards{job=\"snmp-switches\", device_name=~\"$device\"}[15m])",
+                        "legendFormat": "{{device_name}} {{ ifName }} inbound discards",
                         "range": true
                       },
                       "version": "v0"
@@ -456,8 +456,8 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "increase(ifOutDiscards{job=\"snmp-switches\", device_name=~\".+\"}[15m])",
-                        "legendFormat": "{{ device_name }} {{ ifName }} outbound discards",
+                        "expr": "increase(ifOutDiscards{job=\"snmp-switches\", device_name=~\"$device\"}[15m])",
+                        "legendFormat": "{{device_name}} {{ ifName }} outbound discards",
                         "range": true
                       },
                       "version": "v0"
@@ -561,6 +561,94 @@
             "version": "13.0.2"
           }
         }
+      },
+      "panel-5": {
+        "kind": "Panel",
+        "spec": {
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "exemplar": false,
+                        "expr": "topk(10,\r\n  sum by (device_name, ifName) (\r\n    increase(ifInErrors{job=\"snmp-switches\", device_name=~\"$device\"}[1h])\r\n  +\r\n    increase(ifOutErrors{job=\"snmp-switches\", device_name=~\"$device\"}[1h])\r\n  )\r\n)",
+                        "instant": true,
+                        "legendFormat": "{{device_name}} {{ifName}}",
+                        "range": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "queryOptions": {},
+              "transformations": []
+            }
+          },
+          "description": "",
+          "id": 5,
+          "links": [],
+          "title": "Inbound errors + outbound errors",
+          "vizConfig": {
+            "group": "piechart",
+            "kind": "VizConfig",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    }
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "displayLabels": [
+                  "name",
+                  "percent"
+                ],
+                "legend": {
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "pieType": "donut",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "sort": "desc",
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                }
+              }
+            },
+            "version": "13.0.2"
+          }
+        }
       }
     },
     "layout": {
@@ -617,6 +705,19 @@
               "width": 12,
               "x": 12,
               "y": 8
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-5"
+              },
+              "height": 8,
+              "width": 12,
+              "x": 0,
+              "y": 16
             }
           }
         ]

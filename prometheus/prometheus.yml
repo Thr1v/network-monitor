@@ -25,16 +25,19 @@ scrape_configs:
         labels:
           device_name: M002-Admin-1
           location: M002
-      - targets:    
+
+      - targets:
           - 172.31.1.6
         labels:
           device_name: M002-Admin-2
           location: M002
+
       - targets:
-          - 172.31.1.7    
+          - 172.31.1.7
         labels:
           device_name: M002-Admin-3
           location: M002
+
     relabel_configs:
       - source_labels:
           - __address__
@@ -46,3 +49,27 @@ scrape_configs:
 
       - target_label: __address__
         replacement: network-snmp-exporter:9116
+
+  - job_name: website-checks
+    scrape_timeout: 15s
+    metrics_path: /probe
+    params:
+      module:
+        - http_2xx
+    static_configs:
+      - targets:
+          - https://www.chelmsford.ac.uk
+        labels:
+          site_group: websites
+
+    relabel_configs:
+      - source_labels:
+          - __address__
+        target_label: __param_target
+
+      - source_labels:
+          - __param_target
+        target_label: instance
+
+      - target_label: __address__
+        replacement: network-blackbox-exporter:9115
