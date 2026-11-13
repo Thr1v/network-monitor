@@ -1,0 +1,4 @@
+- targets: ["IP GOES HERE"]
+  labels:
+    host: "PC"
+    location: "IT Office"

@@ -1,0 +1,2443 @@
+{
+  "apiVersion": "dashboard.grafana.app/v2",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "server-fleet-overview",
+    "namespace": "default",
+    "uid": "server-fleet-overview"
+  },
+  "spec": {
+    "annotations": [],
+    "cursorSync": "Off",
+    "editable": true,
+    "elements": {
+      "panel-1": {
+        "kind": "Panel",
+        "spec": {
+          "id": 1,
+          "title": "",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "### FLEET HEALTH · ALL WINDOWS SERVERS  \n**Find trouble first.** Click a server name in the table to open its CPU, RAM, GPU, disk and networking details. [Open single-server dashboard](/d/server-health/windows-server-health-connectivity).  \n**Status:** 0 = healthy, 2 = warning, 3 = critical resources, 4 = exporter or ICMP check failed. Missing metrics are not automatically scored as healthy."
+              }
+            }
+          }
+        }
+      },
+      "panel-2": {
+        "kind": "Panel",
+        "spec": {
+          "id": 2,
+          "title": "Monitored",
+          "description": "Total Windows exporters registered as Prometheus targets",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "count(count by (host) (up{job=\"windows-servers\",host=~\"$host\"})) or vector(0)",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      }
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": null,
+                        "color": "green"
+                      },
+                      {
+                        "value": 1,
+                        "color": "green"
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "textMode": "value",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "justifyMode": "center",
+                "orientation": "auto"
+              }
+            }
+          }
+        }
+      },
+      "panel-3": {
+        "kind": "Panel",
+        "spec": {
+          "id": 3,
+          "title": "Healthy",
+          "description": "No warning/critical threshold found in available metrics; missing sensors are not validated",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "count((max by (host) (\n  label_replace((4 * min by (host) (up{job=\"windows-servers\",host=~\"$host\"} == bool 0)), \"signal\", \"exporter-down\", \"host\", \".*\")\n  or\n  label_replace((2 * min by (host) (probe_success{job=\"icmp-ping\",host=~\"$host\"} == bool 0)), \"signal\", \"ping-failed\", \"host\", \".*\")\n  or\n  label_replace((3 * ((100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))) >= bool 90)), \"signal\", \"cpu-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))) >= bool 75)), \"signal\", \"cpu-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((100 * (1 - max by (host) (windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"}))) >= bool 90)), \"signal\", \"ram-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((100 * (1 - max by (host) (windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"}))) >= bool 80)), \"signal\", \"ram-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0)))) >= bool 90)), \"signal\", \"disk-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0)))) >= bool 80)), \"signal\", \"disk-warning\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (100 * rate(windows_net_bytes_total{job=\"windows-servers\",host=~\"$host\"}[5m]) / (windows_net_current_bandwidth_bytes{job=\"windows-servers\",host=~\"$host\"} > 0))) >= bool 90)), \"signal\", \"nic-high\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])),100))) >= bool 98)), \"signal\", \"gpu-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])),100))) >= bool 90)), \"signal\", \"gpu-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"})) >= bool 90)), \"signal\", \"gpu-temp-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"})) >= bool 80)), \"signal\", \"gpu-temp-warning\", \"host\", \".*\")\n)) == 0) or vector(0)",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      }
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": null,
+                        "color": "red"
+                      },
+                      {
+                        "value": 1,
+                        "color": "green"
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "textMode": "value",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "justifyMode": "center",
+                "orientation": "auto"
+              }
+            }
+          }
+        }
+      },
+      "panel-4": {
+        "kind": "Panel",
+        "spec": {
+          "id": 4,
+          "title": "Warnings",
+          "description": "Highest severity is a warning",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "count((max by (host) (\n  label_replace((4 * min by (host) (up{job=\"windows-servers\",host=~\"$host\"} == bool 0)), \"signal\", \"exporter-down\", \"host\", \".*\")\n  or\n  label_replace((2 * min by (host) (probe_success{job=\"icmp-ping\",host=~\"$host\"} == bool 0)), \"signal\", \"ping-failed\", \"host\", \".*\")\n  or\n  label_replace((3 * ((100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))) >= bool 90)), \"signal\", \"cpu-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))) >= bool 75)), \"signal\", \"cpu-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((100 * (1 - max by (host) (windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"}))) >= bool 90)), \"signal\", \"ram-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((100 * (1 - max by (host) (windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"}))) >= bool 80)), \"signal\", \"ram-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0)))) >= bool 90)), \"signal\", \"disk-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0)))) >= bool 80)), \"signal\", \"disk-warning\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (100 * rate(windows_net_bytes_total{job=\"windows-servers\",host=~\"$host\"}[5m]) / (windows_net_current_bandwidth_bytes{job=\"windows-servers\",host=~\"$host\"} > 0))) >= bool 90)), \"signal\", \"nic-high\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])),100))) >= bool 98)), \"signal\", \"gpu-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])),100))) >= bool 90)), \"signal\", \"gpu-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"})) >= bool 90)), \"signal\", \"gpu-temp-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"})) >= bool 80)), \"signal\", \"gpu-temp-warning\", \"host\", \".*\")\n)) == 2) or vector(0)",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      }
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": null,
+                        "color": "green"
+                      },
+                      {
+                        "value": 1,
+                        "color": "orange"
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "textMode": "value",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "justifyMode": "center",
+                "orientation": "auto"
+              }
+            }
+          }
+        }
+      },
+      "panel-5": {
+        "kind": "Panel",
+        "spec": {
+          "id": 5,
+          "title": "Critical",
+          "description": "High CPU, RAM, disk, GPU or temperature readings",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "count((max by (host) (\n  label_replace((4 * min by (host) (up{job=\"windows-servers\",host=~\"$host\"} == bool 0)), \"signal\", \"exporter-down\", \"host\", \".*\")\n  or\n  label_replace((2 * min by (host) (probe_success{job=\"icmp-ping\",host=~\"$host\"} == bool 0)), \"signal\", \"ping-failed\", \"host\", \".*\")\n  or\n  label_replace((3 * ((100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))) >= bool 90)), \"signal\", \"cpu-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))) >= bool 75)), \"signal\", \"cpu-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((100 * (1 - max by (host) (windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"}))) >= bool 90)), \"signal\", \"ram-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((100 * (1 - max by (host) (windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"}))) >= bool 80)), \"signal\", \"ram-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0)))) >= bool 90)), \"signal\", \"disk-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0)))) >= bool 80)), \"signal\", \"disk-warning\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (100 * rate(windows_net_bytes_total{job=\"windows-servers\",host=~\"$host\"}[5m]) / (windows_net_current_bandwidth_bytes{job=\"windows-servers\",host=~\"$host\"} > 0))) >= bool 90)), \"signal\", \"nic-high\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])),100))) >= bool 98)), \"signal\", \"gpu-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])),100))) >= bool 90)), \"signal\", \"gpu-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"})) >= bool 90)), \"signal\", \"gpu-temp-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"})) >= bool 80)), \"signal\", \"gpu-temp-warning\", \"host\", \".*\")\n)) == 3) or vector(0)",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      }
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": null,
+                        "color": "green"
+                      },
+                      {
+                        "value": 1,
+                        "color": "red"
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "textMode": "value",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "justifyMode": "center",
+                "orientation": "auto"
+              }
+            }
+          }
+        }
+      },
+      "panel-6": {
+        "kind": "Panel",
+        "spec": {
+          "id": 6,
+          "title": "Exporter down",
+          "description": "Windows Exporter cannot be scraped; server itself may be fine (service/firewall/route)",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "count((max by (host) (\n  label_replace((4 * min by (host) (up{job=\"windows-servers\",host=~\"$host\"} == bool 0)), \"signal\", \"exporter-down\", \"host\", \".*\")\n  or\n  label_replace((2 * min by (host) (probe_success{job=\"icmp-ping\",host=~\"$host\"} == bool 0)), \"signal\", \"ping-failed\", \"host\", \".*\")\n  or\n  label_replace((3 * ((100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))) >= bool 90)), \"signal\", \"cpu-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))) >= bool 75)), \"signal\", \"cpu-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((100 * (1 - max by (host) (windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"}))) >= bool 90)), \"signal\", \"ram-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((100 * (1 - max by (host) (windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"}))) >= bool 80)), \"signal\", \"ram-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0)))) >= bool 90)), \"signal\", \"disk-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0)))) >= bool 80)), \"signal\", \"disk-warning\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (100 * rate(windows_net_bytes_total{job=\"windows-servers\",host=~\"$host\"}[5m]) / (windows_net_current_bandwidth_bytes{job=\"windows-servers\",host=~\"$host\"} > 0))) >= bool 90)), \"signal\", \"nic-high\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])),100))) >= bool 98)), \"signal\", \"gpu-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])),100))) >= bool 90)), \"signal\", \"gpu-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"})) >= bool 90)), \"signal\", \"gpu-temp-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"})) >= bool 80)), \"signal\", \"gpu-temp-warning\", \"host\", \".*\")\n)) == 4) or vector(0)",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      }
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": null,
+                        "color": "green"
+                      },
+                      {
+                        "value": 1,
+                        "color": "red"
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "textMode": "value",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "justifyMode": "center",
+                "orientation": "auto"
+              }
+            }
+          }
+        }
+      },
+      "panel-7": {
+        "kind": "Panel",
+        "spec": {
+          "id": 7,
+          "title": "Ping failed",
+          "description": "Hosts with probe_success=0; a probe may fail independently of Windows Exporter",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "count(min by(host) (probe_success{job=\"icmp-ping\",host=~\"$host\"} == 0)) or vector(0)",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      }
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": null,
+                        "color": "green"
+                      },
+                      {
+                        "value": 1,
+                        "color": "red"
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "textMode": "value",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "justifyMode": "center",
+                "orientation": "auto"
+              }
+            }
+          }
+        }
+      },
+      "panel-8": {
+        "kind": "Panel",
+        "spec": {
+          "id": 8,
+          "title": "All servers · worst health first (click server name)",
+          "description": "Live triage view; exporter scrape failures rank above critical resource pressure; failed ICMP probes are warnings, because the exporter can still be up. GPU may be blank. Click a server name for details.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sort_desc(max by (host) (\n  label_replace((4 * min by (host) (up{job=\"windows-servers\",host=~\"$host\"} == bool 0)), \"signal\", \"exporter-down\", \"host\", \".*\")\n  or\n  label_replace((2 * min by (host) (probe_success{job=\"icmp-ping\",host=~\"$host\"} == bool 0)), \"signal\", \"ping-failed\", \"host\", \".*\")\n  or\n  label_replace((3 * ((100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))) >= bool 90)), \"signal\", \"cpu-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))) >= bool 75)), \"signal\", \"cpu-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((100 * (1 - max by (host) (windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"}))) >= bool 90)), \"signal\", \"ram-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((100 * (1 - max by (host) (windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"}))) >= bool 80)), \"signal\", \"ram-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0)))) >= bool 90)), \"signal\", \"disk-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0)))) >= bool 80)), \"signal\", \"disk-warning\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (100 * rate(windows_net_bytes_total{job=\"windows-servers\",host=~\"$host\"}[5m]) / (windows_net_current_bandwidth_bytes{job=\"windows-servers\",host=~\"$host\"} > 0))) >= bool 90)), \"signal\", \"nic-high\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])),100))) >= bool 98)), \"signal\", \"gpu-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])),100))) >= bool 90)), \"signal\", \"gpu-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"})) >= bool 90)), \"signal\", \"gpu-temp-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"})) >= bool 80)), \"signal\", \"gpu-temp-warning\", \"host\", \".*\")\n))",
+                        "legendFormat": "",
+                        "range": false,
+                        "instant": true,
+                        "format": "table"
+                      }
+                    },
+                    "refId": "A"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "(100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m]))))",
+                        "legendFormat": "",
+                        "range": false,
+                        "instant": true,
+                        "format": "table"
+                      }
+                    },
+                    "refId": "B"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "(100 * (1 - max by (host) (windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"})))",
+                        "legendFormat": "",
+                        "range": false,
+                        "instant": true,
+                        "format": "table"
+                      }
+                    },
+                    "refId": "C"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "(max by (host) (100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0))))",
+                        "legendFormat": "",
+                        "range": false,
+                        "instant": true,
+                        "format": "table"
+                      }
+                    },
+                    "refId": "D"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "(max by (host) (clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])),100)))",
+                        "legendFormat": "",
+                        "range": false,
+                        "instant": true,
+                        "format": "table"
+                      }
+                    },
+                    "refId": "E"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "(max by (host) (100 * rate(windows_net_bytes_total{job=\"windows-servers\",host=~\"$host\"}[5m]) / (windows_net_current_bandwidth_bytes{job=\"windows-servers\",host=~\"$host\"} > 0)))",
+                        "legendFormat": "",
+                        "range": false,
+                        "instant": true,
+                        "format": "table"
+                      }
+                    },
+                    "refId": "F"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "min by (host) (probe_success{job=\"icmp-ping\",host=~\"$host\"})",
+                        "legendFormat": "",
+                        "range": false,
+                        "instant": true,
+                        "format": "table"
+                      }
+                    },
+                    "refId": "G"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "min by (host) (up{job=\"windows-servers\",host=~\"$host\"})",
+                        "legendFormat": "",
+                        "range": false,
+                        "instant": true,
+                        "format": "table"
+                      }
+                    },
+                    "refId": "H"
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "joinByField",
+                  "spec": {
+                    "options": {
+                      "byField": "host",
+                      "mode": "outerTabular"
+                    }
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true,
+                        "Time 1": true,
+                        "Time 2": true,
+                        "Time 3": true,
+                        "Time 4": true,
+                        "Time 5": true,
+                        "Time 6": true,
+                        "Time 7": true,
+                        "Time 8": true,
+                        "Time 9": true,
+                        "job": true,
+                        "instance": true,
+                        "location": true,
+                        "signal": true,
+                        "__name__": true
+                      },
+                      "indexByName": {
+                        "host": 0,
+                        "Value #A": 1,
+                        "Value #B": 2,
+                        "Value #C": 3,
+                        "Value #D": 4,
+                        "Value #E": 5,
+                        "Value #F": 6,
+                        "Value #G": 7,
+                        "Value #H": 8
+                      },
+                      "renameByName": {
+                        "host": "Server",
+                        "Value #A": "Status",
+                        "Value #B": "CPU (%)",
+                        "Value #C": "RAM (%)",
+                        "Value #D": "Fullest disk (%)",
+                        "Value #E": "GPU 3D (%)",
+                        "Value #F": "Busiest NIC (%)",
+                        "Value #G": "Ping",
+                        "Value #H": "Exporter"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "filterable": true
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Server"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "title": "Inspect this server",
+                            "url": "/d/server-health/windows-server-health-connectivity?var-host=${__data.fields[\"Server\"]}&${__url_time_range}",
+                            "targetBlank": false
+                          }
+                        ]
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "auto"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Status"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "none"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 0
+                      },
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "0": {
+                                "text": "OK",
+                                "color": "green"
+                              },
+                              "2": {
+                                "text": "WARNING",
+                                "color": "orange"
+                              },
+                              "3": {
+                                "text": "CRITICAL",
+                                "color": "red"
+                              },
+                              "4": {
+                                "text": "CHECK",
+                                "color": "dark-red"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "value": null,
+                              "color": "green"
+                            },
+                            {
+                              "value": 2,
+                              "color": "orange"
+                            },
+                            {
+                              "value": 3,
+                              "color": "red"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-background"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "CPU (%)"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "percent"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 0
+                      },
+                      {
+                        "id": "min",
+                        "value": 0
+                      },
+                      {
+                        "id": "max",
+                        "value": 100
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "value": null,
+                              "color": "green"
+                            },
+                            {
+                              "value": 75,
+                              "color": "orange"
+                            },
+                            {
+                              "value": 90,
+                              "color": "red"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "gauge",
+                          "mode": "gradient"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "RAM (%)"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "percent"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 0
+                      },
+                      {
+                        "id": "min",
+                        "value": 0
+                      },
+                      {
+                        "id": "max",
+                        "value": 100
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "value": null,
+                              "color": "green"
+                            },
+                            {
+                              "value": 80,
+                              "color": "orange"
+                            },
+                            {
+                              "value": 90,
+                              "color": "red"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "gauge",
+                          "mode": "gradient"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Fullest disk (%)"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "percent"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 0
+                      },
+                      {
+                        "id": "min",
+                        "value": 0
+                      },
+                      {
+                        "id": "max",
+                        "value": 100
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "value": null,
+                              "color": "green"
+                            },
+                            {
+                              "value": 80,
+                              "color": "orange"
+                            },
+                            {
+                              "value": 90,
+                              "color": "red"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "gauge",
+                          "mode": "gradient"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "GPU 3D (%)"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "percent"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 0
+                      },
+                      {
+                        "id": "min",
+                        "value": 0
+                      },
+                      {
+                        "id": "max",
+                        "value": 100
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "value": null,
+                              "color": "green"
+                            },
+                            {
+                              "value": 90,
+                              "color": "orange"
+                            },
+                            {
+                              "value": 98,
+                              "color": "red"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "gauge",
+                          "mode": "gradient"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Busiest NIC (%)"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "percent"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 0
+                      },
+                      {
+                        "id": "min",
+                        "value": 0
+                      },
+                      {
+                        "id": "max",
+                        "value": 100
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "value": null,
+                              "color": "green"
+                            },
+                            {
+                              "value": 75,
+                              "color": "orange"
+                            },
+                            {
+                              "value": 90,
+                              "color": "red"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "gauge",
+                          "mode": "gradient"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Ping"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "0": {
+                                "text": "FAIL",
+                                "color": "red"
+                              },
+                              "1": {
+                                "text": "UP",
+                                "color": "green"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "value": null,
+                              "color": "red"
+                            },
+                            {
+                              "value": 1,
+                              "color": "green"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-background"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Exporter"
+                    },
+                    "properties": [
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "0": {
+                                "text": "FAIL",
+                                "color": "red"
+                              },
+                              "1": {
+                                "text": "UP",
+                                "color": "green"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "value": null,
+                              "color": "red"
+                            },
+                            {
+                              "value": 1,
+                              "color": "green"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-background"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "options": {
+                "showHeader": true,
+                "cellHeight": "sm",
+                "frozenColumns": {
+                  "left": 1
+                },
+                "sortBy": [
+                  {
+                    "displayName": "Status",
+                    "desc": true
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-9": {
+        "kind": "Panel",
+        "spec": {
+          "id": 9,
+          "title": "Attention required · severity ≥ warning",
+          "description": "This simple table shows only hosts with a detected issue (one query, no joins). 2=warning (including failed ping), 3=critical resource, 4=exporter scrape failed.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sort_desc((max by (host) (\n  label_replace((4 * min by (host) (up{job=\"windows-servers\",host=~\"$host\"} == bool 0)), \"signal\", \"exporter-down\", \"host\", \".*\")\n  or\n  label_replace((2 * min by (host) (probe_success{job=\"icmp-ping\",host=~\"$host\"} == bool 0)), \"signal\", \"ping-failed\", \"host\", \".*\")\n  or\n  label_replace((3 * ((100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))) >= bool 90)), \"signal\", \"cpu-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))) >= bool 75)), \"signal\", \"cpu-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((100 * (1 - max by (host) (windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"}))) >= bool 90)), \"signal\", \"ram-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((100 * (1 - max by (host) (windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"}))) >= bool 80)), \"signal\", \"ram-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0)))) >= bool 90)), \"signal\", \"disk-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0)))) >= bool 80)), \"signal\", \"disk-warning\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (100 * rate(windows_net_bytes_total{job=\"windows-servers\",host=~\"$host\"}[5m]) / (windows_net_current_bandwidth_bytes{job=\"windows-servers\",host=~\"$host\"} > 0))) >= bool 90)), \"signal\", \"nic-high\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])),100))) >= bool 98)), \"signal\", \"gpu-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])),100))) >= bool 90)), \"signal\", \"gpu-warning\", \"host\", \".*\")\n  or\n  label_replace((3 * ((max by (host) (windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"})) >= bool 90)), \"signal\", \"gpu-temp-critical\", \"host\", \".*\")\n  or\n  label_replace((2 * ((max by (host) (windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"})) >= bool 80)), \"signal\", \"gpu-temp-warning\", \"host\", \".*\")\n)) > 0)",
+                        "legendFormat": "",
+                        "range": false,
+                        "instant": true,
+                        "format": "table"
+                      }
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true
+                      },
+                      "indexByName": {
+                        "host": 0,
+                        "Value": 1
+                      },
+                      "renameByName": {
+                        "host": "Server",
+                        "Value": "Severity"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    }
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "host"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "title": "Investigate server",
+                            "url": "/d/server-health/windows-server-health-connectivity?var-host=${__data.fields.host}&${__url_time_range}"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Value"
+                    },
+                    "properties": [
+                      {
+                        "id": "decimals",
+                        "value": 0
+                      },
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "type": "value",
+                            "options": {
+                              "0": {
+                                "text": "OK",
+                                "color": "green"
+                              },
+                              "2": {
+                                "text": "WARNING",
+                                "color": "orange"
+                              },
+                              "3": {
+                                "text": "CRITICAL",
+                                "color": "red"
+                              },
+                              "4": {
+                                "text": "CHECK",
+                                "color": "dark-red"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "value": null,
+                              "color": "green"
+                            },
+                            {
+                              "value": 2,
+                              "color": "orange"
+                            },
+                            {
+                              "value": 3,
+                              "color": "red"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-background"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "options": {
+                "showHeader": true,
+                "cellHeight": "sm",
+                "sortBy": [
+                  {
+                    "displayName": "Severity",
+                    "desc": true
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-10": {
+        "kind": "Panel",
+        "spec": {
+          "id": 10,
+          "title": "Fullest 20 volumes · fleet capacity watch",
+          "description": "A full volume may be critical even when the host appears otherwise healthy. Drive-letter volumes only.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "topk(20, 100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0)))",
+                        "legendFormat": "",
+                        "range": false,
+                        "instant": true,
+                        "format": "table"
+                      }
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "filterFieldsByName",
+                  "spec": {
+                    "options": {
+                      "include": {
+                        "names": [
+                          "host",
+                          "volume",
+                          "Value"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "indexByName": {
+                        "host": 0,
+                        "volume": 1,
+                        "Value": 2
+                      },
+                      "renameByName": {
+                        "host": "Server",
+                        "volume": "Drive",
+                        "Value": "Used (%)"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    }
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Used (%)"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "percent"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 1
+                      },
+                      {
+                        "id": "min",
+                        "value": 0
+                      },
+                      {
+                        "id": "max",
+                        "value": 100
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "value": null,
+                              "color": "green"
+                            },
+                            {
+                              "value": 80,
+                              "color": "orange"
+                            },
+                            {
+                              "value": 90,
+                              "color": "red"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "gauge",
+                          "mode": "gradient"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Server"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "title": "Inspect host storage",
+                            "url": "/d/server-health/windows-server-health-connectivity?var-host=${__data.fields[\"Server\"]}&${__url_time_range}"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "options": {
+                "showHeader": true,
+                "cellHeight": "sm",
+                "sortBy": [
+                  {
+                    "displayName": "Used (%)",
+                    "desc": true
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-11": {
+        "kind": "Panel",
+        "spec": {
+          "id": 11,
+          "title": "Highest CPU usage · top 12",
+          "description": "5-minute CPU activity",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "topk(12, (100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))))",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      }
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "bargauge",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": null,
+                        "color": "green"
+                      },
+                      {
+                        "value": 75,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 90,
+                        "color": "red"
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "displayMode": "gradient",
+                "orientation": "horizontal",
+                "showUnfilled": true,
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "minVizWidth": 70,
+                "minVizHeight": 18
+              }
+            }
+          }
+        }
+      },
+      "panel-12": {
+        "kind": "Panel",
+        "spec": {
+          "id": 12,
+          "title": "Highest RAM use · top 12",
+          "description": "Current RAM utilisation",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "topk(12, (100 * (1 - max by (host) (windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"}))))",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      }
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "bargauge",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": null,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 90,
+                        "color": "red"
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "displayMode": "gradient",
+                "orientation": "horizontal",
+                "showUnfilled": true,
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "minVizWidth": 70,
+                "minVizHeight": 18
+              }
+            }
+          }
+        }
+      },
+      "panel-13": {
+        "kind": "Panel",
+        "spec": {
+          "id": 13,
+          "title": "Fullest hosts · worst drive each",
+          "description": "Only letter-mounted local volumes",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "topk(12, (max by (host) (100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / (windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} > 0)))))",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      }
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "bargauge",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": null,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 90,
+                        "color": "red"
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "displayMode": "gradient",
+                "orientation": "horizontal",
+                "showUnfilled": true,
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "minVizWidth": 70,
+                "minVizHeight": 18
+              }
+            }
+          }
+        }
+      },
+      "panel-14": {
+        "kind": "Panel",
+        "spec": {
+          "id": 14,
+          "title": "Busiest NIC percentage · top 12",
+          "description": "5-minute traffic as percentage of interface link speed",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "topk(12, (max by (host) (100 * rate(windows_net_bytes_total{job=\"windows-servers\",host=~\"$host\"}[5m]) / (windows_net_current_bandwidth_bytes{job=\"windows-servers\",host=~\"$host\"} > 0))))",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      }
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "bargauge",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": null,
+                        "color": "green"
+                      },
+                      {
+                        "value": 75,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 90,
+                        "color": "red"
+                      }
+                    ]
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "displayMode": "gradient",
+                "orientation": "horizontal",
+                "showUnfilled": true,
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "minVizWidth": 70,
+                "minVizHeight": 18
+              }
+            }
+          }
+        }
+      },
+      "panel-15": {
+        "kind": "Panel",
+        "spec": {
+          "id": 15,
+          "title": "Windows exporter and ping history · last selected time window",
+          "description": "Green is good; red = exporter scrape / ping failure. Gaps mean a sample was missing; they do not prove downtime. Choose last 24h to review overnight outages.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "up{job=\"windows-servers\",host=~\"$host\"}",
+                        "legendFormat": "{{host}} · Windows Exporter",
+                        "range": true,
+                        "instant": false
+                      }
+                    },
+                    "refId": "A"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "probe_success{job=\"icmp-ping\",host=~\"$host\"}",
+                        "legendFormat": "{{host}} · ICMP",
+                        "range": true,
+                        "instant": false
+                      }
+                    },
+                    "refId": "B"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "state-timeline",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "mappings": [
+                    {
+                      "type": "value",
+                      "options": {
+                        "0": {
+                          "text": "DOWN",
+                          "color": "red"
+                        },
+                        "1": {
+                          "text": "UP",
+                          "color": "green"
+                        }
+                      }
+                    }
+                  ],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "red",
+                        "value": null
+                      },
+                      {
+                        "color": "green",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "lineWidth": 0,
+                    "fillOpacity": 85,
+                    "spanNulls": false,
+                    "insertNulls": false
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "mergeValues": true,
+                "showValue": "never",
+                "alignValue": "center",
+                "rowHeight": 0.8,
+                "legend": {
+                  "showLegend": false,
+                  "displayMode": "list",
+                  "placement": "bottom"
+                },
+                "tooltip": {
+                  "mode": "single",
+                  "sort": "none"
+                },
+                "annotations": {
+                  "multiLane": false,
+                  "clustering": -1
+                }
+              }
+            }
+          }
+        }
+      },
+      "panel-16": {
+        "kind": "Panel",
+        "spec": {
+          "id": 16,
+          "title": "",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "**How to use:** The main table ranks potential issues (4 exporter scrape failed, 3 critical resource, 2 warning including ping failure, 0 no threshold breached). Click a **Server** link to examine its individual dashboard. Physical GPU counters are optional. **Ping unavailable does not mean Windows Exporter is down**, and vice versa; compare both before investigating network access. These are dashboard colour thresholds, not notification rules. For true alerting use Prometheus/Grafana alert rules with sustained durations."
+              }
+            }
+          }
+        }
+      }
+    },
+    "layout": {
+      "kind": "GridLayout",
+      "spec": {
+        "items": [
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-1"
+              },
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 2
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-2"
+              },
+              "x": 0,
+              "y": 2,
+              "width": 4,
+              "height": 4
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-3"
+              },
+              "x": 4,
+              "y": 2,
+              "width": 4,
+              "height": 4
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-4"
+              },
+              "x": 8,
+              "y": 2,
+              "width": 4,
+              "height": 4
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-5"
+              },
+              "x": 12,
+              "y": 2,
+              "width": 4,
+              "height": 4
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-6"
+              },
+              "x": 16,
+              "y": 2,
+              "width": 4,
+              "height": 4
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-7"
+              },
+              "x": 20,
+              "y": 2,
+              "width": 4,
+              "height": 4
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-8"
+              },
+              "x": 0,
+              "y": 6,
+              "width": 24,
+              "height": 20
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-9"
+              },
+              "x": 0,
+              "y": 26,
+              "width": 12,
+              "height": 10
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-10"
+              },
+              "x": 12,
+              "y": 26,
+              "width": 12,
+              "height": 10
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-11"
+              },
+              "x": 0,
+              "y": 36,
+              "width": 12,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-12"
+              },
+              "x": 12,
+              "y": 36,
+              "width": 12,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-13"
+              },
+              "x": 0,
+              "y": 45,
+              "width": 12,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-14"
+              },
+              "x": 12,
+              "y": 45,
+              "width": 12,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-15"
+              },
+              "x": 0,
+              "y": 54,
+              "width": 24,
+              "height": 20
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-16"
+              },
+              "x": 0,
+              "y": 74,
+              "width": 24,
+              "height": 3
+            }
+          }
+        ]
+      }
+    },
+    "links": [],
+    "liveNow": false,
+    "preload": false,
+    "tags": [
+      "windows",
+      "fleet",
+      "server-health",
+      "triage",
+      "prometheus",
+      "capacity",
+      "availability"
+    ],
+    "timeSettings": {
+      "autoRefresh": "30s",
+      "autoRefreshIntervals": [
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "1h"
+      ],
+      "fiscalYearStartMonth": 0,
+      "from": "now-6h",
+      "hideTimepicker": false,
+      "timezone": "browser",
+      "to": "now"
+    },
+    "title": "Windows Server Fleet Overview",
+    "variables": [
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "allValue": ".*",
+          "allowCustomValue": false,
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          },
+          "definition": "label_values(up{job=\"windows-servers\"},host)",
+          "hide": "dontHide",
+          "includeAll": true,
+          "label": "Host",
+          "multi": true,
+          "name": "host",
+          "options": [],
+          "query": {
+            "datasource": {
+              "name": "prometheus"
+            },
+            "group": "prometheus",
+            "kind": "DataQuery",
+            "spec": {
+              "qryType": 1,
+              "query": "label_values(up{job=\"windows-servers\"},host)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            },
+            "version": "v0"
+          },
+          "refresh": "onDashboardLoad",
+          "regex": "",
+          "regexApplyTo": "value",
+          "skipUrlSync": false,
+          "sort": "alphabeticalAsc"
+        }
+      }
+    ]
+  }
+}
