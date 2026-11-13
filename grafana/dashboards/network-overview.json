@@ -5,8 +5,8 @@
     "name": "network-overview",
     "namespace": "default",
     "uid": "80071ccc-b5a9-471a-9b65-b64892a0559f",
-    "resourceVersion": "1780932971116005",
-    "generation": 12,
+    "resourceVersion": "1781020012289996",
+    "generation": 14,
     "creationTimestamp": "2026-06-08T10:23:22Z",
     "labels": {
       "grafana.app/deprecatedInternalID": "1281243847823360"
@@ -16,11 +16,11 @@
       "grafana.app/folder": "dfoia2u8hnchsb",
       "grafana.app/managedBy": "classic-file-provisioning",
       "grafana.app/managerId": "Network Dashboards",
-      "grafana.app/sourceChecksum": "77d31fdda47c9d68ef7496c582b72e01",
+      "grafana.app/sourceChecksum": "65f853da8306d304370ac361d8f31513",
       "grafana.app/sourcePath": "/var/lib/grafana/dashboards/network-overview.json",
-      "grafana.app/sourceTimestamp": "1780932960000",
+      "grafana.app/sourceTimestamp": "1781019964000",
       "grafana.app/updatedBy": "access-policy:service",
-      "grafana.app/updatedTimestamp": "2026-06-08T15:36:11Z",
+      "grafana.app/updatedTimestamp": "2026-06-09T15:46:52Z",
       "grafana.app/folderTitle": "Network Monitoring",
       "grafana.app/folderUrl": "/dashboards/f/dfoia2u8hnchsb/network-monitoring"
     }
@@ -69,9 +69,11 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
+                        "exemplar": false,
                         "expr": "up{job=\"snmp-switches\", device_name=~\"$device\"}",
+                        "instant": true,
                         "legendFormat": "{{device_name}}",
-                        "range": true
+                        "range": false
                       },
                       "version": "v0"
                     },
@@ -93,11 +95,30 @@
             "spec": {
               "fieldConfig": {
                 "defaults": {
+                  "mappings": [
+                    {
+                      "options": {
+                        "0": {
+                          "index": 1,
+                          "text": "BAD"
+                        },
+                        "1": {
+                          "index": 0,
+                          "text": "OK"
+                        }
+                      },
+                      "type": "value"
+                    }
+                  ],
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
                       {
                         "color": "red",
+                        "value": 0
+                      },
+                      {
+                        "color": "semi-dark-red",
                         "value": 0
                       },
                       {
@@ -111,7 +132,7 @@
               },
               "options": {
                 "colorMode": "background",
-                "graphMode": "area",
+                "graphMode": "none",
                 "justifyMode": "center",
                 "orientation": "horizontal",
                 "percentChangeColorMode": "standard",
@@ -123,7 +144,11 @@
                   "values": false
                 },
                 "showPercentChange": false,
-                "textMode": "auto",
+                "text": {
+                  "titleSize": 15,
+                  "valueSize": 15
+                },
+                "textMode": "value_and_name",
                 "wideLayout": true
               }
             },
@@ -241,7 +266,7 @@
                       }
                     ]
                   },
-                  "unit": "bps"
+                  "unit": "MBs"
                 },
                 "overrides": []
               },
@@ -662,7 +687,7 @@
                 "kind": "ElementReference",
                 "name": "panel-1"
               },
-              "height": 8,
+              "height": 16,
               "width": 8,
               "x": 0,
               "y": 0
@@ -686,11 +711,11 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
-                "name": "panel-3"
+                "name": "panel-5"
               },
               "height": 8,
-              "width": 12,
-              "x": 0,
+              "width": 4,
+              "x": 8,
               "y": 8
             }
           },
@@ -712,7 +737,7 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
-                "name": "panel-5"
+                "name": "panel-3"
               },
               "height": 8,
               "width": 12,

@@ -1,0 +1,10 @@
+# Use the same 'host' label as in windows-servers.yml for a server.
+# Ping targets may also include switches, routers, gateways and other devices.
+- targets: ["192.0.2.10"]
+  labels:
+    host: "EXAMPLE-SERVER"
+    location: "EXAMPLE-SITE"
+- targets: ["192.0.2.1"]
+  labels:
+    host: "EXAMPLE-GATEWAY"
+    location: "EXAMPLE-SITE"

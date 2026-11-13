@@ -1,3 +1,4 @@
+# Prometheus: existing switch/website monitoring plus opt-in Windows hosts and ICMP probes.
 global:
   scrape_interval: 30s
   evaluation_interval: 30s
@@ -25,28 +26,21 @@ scrape_configs:
         labels:
           device_name: M002-Admin-1
           location: M002
-
       - targets:
           - 172.31.1.6
         labels:
           device_name: M002-Admin-2
           location: M002
-
       - targets:
           - 172.31.1.7
         labels:
           device_name: M002-Admin-3
           location: M002
-
     relabel_configs:
-      - source_labels:
-          - __address__
+      - source_labels: [__address__]
         target_label: __param_target
-
-      - source_labels:
-          - __param_target
+      - source_labels: [__param_target]
         target_label: instance
-
       - target_label: __address__
         replacement: network-snmp-exporter:9116
 
@@ -61,15 +55,38 @@ scrape_configs:
           - https://www.chelmsford.ac.uk
         labels:
           site_group: websites
-
     relabel_configs:
-      - source_labels:
-          - __address__
+      - source_labels: [__address__]
         target_label: __param_target
-
-      - source_labels:
-          - __param_target
+      - source_labels: [__param_target]
         target_label: instance
+      - target_label: __address__
+        replacement: network-blackbox-exporter:9115
 
+  # Add server addresses to prometheus/targets/windows-servers.local.yml (port 9182).
+  - job_name: windows-servers
+    scrape_timeout: 20s
+    metrics_path: /metrics
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/targets/windows-servers.local.yml
+        refresh_interval: 1m
+
+  # ICMP probes are independent of windows_exporter; add hosts to ping-targets.local.yml.
+  - job_name: icmp-ping
+    scrape_timeout: 10s
+    metrics_path: /probe
+    params:
+      module:
+        - icmp_ipv4
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/targets/ping-targets.local.yml
+        refresh_interval: 1m
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
       - target_label: __address__
         replacement: network-blackbox-exporter:9115

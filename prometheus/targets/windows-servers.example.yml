@@ -1,0 +1,5 @@
+# Example only: 192.0.2.0/24 is reserved for documentation.
+- targets: ["192.0.2.10:9182"]
+  labels:
+    host: "EXAMPLE-SERVER"
+    location: "EXAMPLE-SITE"
