@@ -37,6 +37,7 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/rules:/etc/prometheus/rules:ro
+      - ./prometheus/targets:/etc/prometheus/targets:ro
       - prometheus-data:/prometheus
     networks:
       - monitoring
@@ -56,13 +57,15 @@ services:
     image: prom/blackbox-exporter:latest
     container_name: network-blackbox-exporter
     restart: unless-stopped
+    cap_add:
+      - NET_RAW
     ports:
       - "127.0.0.1:${BLACKBOX_EXPORTER_PORT}:9115"
     volumes:
       - ./blackbox/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
     networks:
       - monitoring
-      
+
 volumes:
   grafana-data:
   prometheus-data:

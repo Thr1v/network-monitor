@@ -1,0 +1,104 @@
+groups:
+  - name: windows-server-health
+    rules:
+      - alert: WindowsServerExporterDown
+        expr: up{job="windows-servers"} == 0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Server metrics unavailable for {{ $labels.host }}"
+          description: "Prometheus cannot scrape windows_exporter at {{ $labels.instance }}. Check the service, port 9182, firewall and network."
+
+      - alert: WindowsServerCPUHigh
+        expr: 100 * (1 - avg by (instance, host) (rate(windows_cpu_time_seconds_total{job="windows-servers",mode="idle"}[5m]))) > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.host }}"
+          description: "Average CPU usage is above 90% for at least 10 minutes."
+
+      - alert: WindowsServerMemoryHigh
+        expr: 100 * (1 - windows_memory_available_bytes{job="windows-servers"} / windows_memory_physical_total_bytes{job="windows-servers"}) > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High RAM usage on {{ $labels.host }}"
+          description: "Physical RAM utilisation is above 90%."
+
+      - alert: WindowsServerDiskSpaceLow
+        expr: 100 * (1 - windows_logical_disk_free_bytes{job="windows-servers",volume=~"[A-Za-z]:"} / windows_logical_disk_size_bytes{job="windows-servers",volume=~"[A-Za-z]:"}) > 85
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk {{ $labels.volume }} filling up on {{ $labels.host }}"
+          description: "Disk used capacity has exceeded 85%."
+
+      - alert: WindowsServerDiskSpaceCritical
+        expr: 100 * (1 - windows_logical_disk_free_bytes{job="windows-servers",volume=~"[A-Za-z]:"} / windows_logical_disk_size_bytes{job="windows-servers",volume=~"[A-Za-z]:"}) > 95
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk {{ $labels.volume }} critical on {{ $labels.host }}"
+          description: "Disk used capacity has exceeded 95%."
+
+      # Optional GPU sensor alarm: only evaluates on compatible hardware/drivers.
+      - alert: WindowsGpuNearThermalLimit
+        expr: windows_gpu_temperature_celsius{job="windows-servers"} > (windows_gpu_temperature_warning_celsius{job="windows-servers"} - 5)
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "GPU close to thermal warning limit on {{ $labels.host }}"
+          description: "Physical GPU {{ $labels.phys }} is within 5 C of its reported warning temperature."
+
+      - alert: WindowsNetworkInterfaceSaturated
+        expr: (100 * rate(windows_net_bytes_total{job="windows-servers"}[5m]) / windows_net_current_bandwidth_bytes{job="windows-servers"} > 85) and on(instance, nic) (windows_net_current_bandwidth_bytes{job="windows-servers"} > 0)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High NIC utilisation on {{ $labels.host }}"
+          description: "NIC {{ $labels.nic }} has sustained traffic over 85% of its reported bandwidth."
+
+      - alert: WindowsNetworkPacketErrors
+        expr: increase(windows_net_packets_received_errors_total{job="windows-servers"}[15m]) + increase(windows_net_packets_outbound_errors_total{job="windows-servers"}[15m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "NIC packet errors on {{ $labels.host }}"
+          description: "Interface {{ $labels.nic }} reported more than 10 received/transmit errors over 15 minutes."
+
+  - name: network-reachability
+    rules:
+      - alert: PingTargetUnavailable
+        expr: probe_success{job="icmp-ping"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ICMP ping failing for {{ $labels.host }}"
+          description: "Blackbox ICMP probes to {{ $labels.instance }} have failed continuously for two minutes."
+
+      - alert: PingTargetIntermittentFailures
+        expr: avg_over_time(probe_success{job="icmp-ping"}[15m]) < 0.95
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Intermittent ICMP failures to {{ $labels.host }}"
+          description: "Fewer than 95% of observed ICMP probes succeeded in the last 15 minutes (not a packet-loss measurement)."
+
+      - alert: PingTargetHighLatency
+        expr: avg_over_time(probe_icmp_duration_seconds{job="icmp-ping",phase="rtt"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High ping latency to {{ $labels.host }}"
+          description: "Average ICMP round-trip time exceeded 100 ms over five minutes. Adjust this to your LAN baseline."

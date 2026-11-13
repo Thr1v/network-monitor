@@ -28,3 +28,10 @@ modules:
       follow_redirects: true
       fail_if_body_not_matches_regexp:
         - ".*"
+
+  # Requires network reachability and the NET_RAW capability for the container.
+  icmp_ipv4:
+    prober: icmp
+    timeout: 5s
+    icmp:
+      preferred_ip_protocol: ip4
