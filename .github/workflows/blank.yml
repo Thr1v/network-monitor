@@ -203,11 +203,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr create \
+          if output=$(gh pr create \
             --repo "$GITHUB_REPOSITORY" \
             --base main --head feature --draft \
             --title 'Review Network Monitor feature changes' \
-            --body $'## Purpose\nChanges proposed from `feature` to `main`.\n\n## Reviewer checklist\n- [ ] Examine the changed configuration and dashboards\n- [ ] Inspect all CI stage results and the Quality gate\n- [ ] Verify no local credentials, internal target inventory or database files are included\n- [ ] Manually approve the PR before merging\n\n**This workflow never merges or deploys automatically.**'
+            --body $'## Purpose\nChanges proposed from `feature` to `main`.\n\n## Reviewer checklist\n- [ ] Examine the changed configuration and dashboards\n- [ ] Inspect all CI stage results and the Quality gate\n- [ ] Verify no local credentials, internal target inventory or database files are included\n- [ ] Manually approve the PR before merging\n\n**This workflow never merges or deploys automatically.**' 2>&1); then
+            echo "$output"
+          else
+            status=$?
+            if [[ "$output" == *'GitHub Actions is not permitted to create or approve pull requests'* ]]; then
+              echo "::warning::GitHub Actions cannot create pull requests; open the review PR manually or enable PR creation in Actions settings."
+              echo "GitHub Actions could not create the draft PR. [Open a PR manually](https://github.com/${GITHUB_REPOSITORY}/compare/main...feature?expand=1) or enable PR creation in Settings > Actions > General." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "$output" >&2
+              exit "$status"
+            fi
+          fi
       - name: PR creation guidance
         if: always()
         run: |

@@ -1,5 +1,8 @@
 """Validation for Prometheus, Blackbox, and provisioning configuration."""
+import os
 import re
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 from common import ROOT, load_yaml
@@ -70,6 +73,58 @@ class ConfigurationTests(unittest.TestCase):
                     self.assertNotIn(name, names, f'Duplicate rule: {name}')
                     names.add(name)
                     self.assertTrue(str(rule.get('expr', '')).strip(), name)
+
+
+class ReviewPrWorkflowTests(unittest.TestCase):
+    def run_step(self, step, output, status):
+        script = load_yaml('.github/workflows/blank.yml')['jobs']['open-review-pr']['steps'][step]['run']
+        with tempfile.TemporaryDirectory() as directory:
+            summary = Path(directory) / 'summary'
+            github_output = Path(directory) / 'output'
+            calls = Path(directory) / 'calls'
+            env = dict(os.environ, GITHUB_REPOSITORY='owner/repo',
+                       GITHUB_STEP_SUMMARY=str(summary), GITHUB_OUTPUT=str(github_output),
+                       GH_CALLS=str(calls), GH_MOCK_OUTPUT=output, GH_MOCK_STATUS=str(status))
+            result = subprocess.run(
+                ['bash', '-e', '-c', 'gh() { echo "$*" >> "$GH_CALLS"; printf "%s\\n" "$GH_MOCK_OUTPUT"; return "$GH_MOCK_STATUS"; }\n' + script],
+                env=env, text=True, capture_output=True,
+            )
+            return (result, summary.read_text() if summary.exists() else '',
+                    github_output.read_text() if github_output.exists() else '', calls.read_text())
+
+    def test_existing_pr_is_reused(self):
+        steps = load_yaml('.github/workflows/blank.yml')['jobs']['open-review-pr']['steps']
+        result, summary, output, calls = self.run_step(0, 'https://github.com/owner/repo/pull/1', 0)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn('Existing PR: https://github.com/owner/repo/pull/1', summary)
+        self.assertIn('url=https://github.com/owner/repo/pull/1', output)
+        self.assertIn('pr list', calls)
+        self.assertEqual(steps[1]['if'], "steps.existing.outputs.url == ''")
+
+    def test_pr_creation_succeeds_when_allowed(self):
+        result, summary, _, calls = self.run_step(1, 'https://github.com/owner/repo/pull/2', 0)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn('https://github.com/owner/repo/pull/2', result.stdout)
+        self.assertIn('pr create', calls)
+        self.assertNotIn('manually', summary)
+
+    def test_pr_lookup_failure_still_fails(self):
+        result, _, _, _ = self.run_step(0, 'API unavailable', 42)
+        self.assertEqual(result.returncode, 42)
+
+    def test_policy_denial_offers_manual_pr(self):
+        result, summary, _, _ = self.run_step(
+            1, 'GraphQL: GitHub Actions is not permitted to create or approve pull requests (createPullRequest)', 1)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn('::warning::', result.stdout)
+        self.assertIn('https://github.com/owner/repo/compare/main...feature?expand=1', summary)
+        self.assertIn('Settings > Actions > General', summary)
+
+    def test_other_creation_errors_still_fail(self):
+        result, summary, _, _ = self.run_step(1, 'API unavailable', 42)
+        self.assertEqual(result.returncode, 42)
+        self.assertIn('API unavailable', result.stderr)
+        self.assertNotIn('manually', summary)
 
 
 if __name__ == '__main__':
