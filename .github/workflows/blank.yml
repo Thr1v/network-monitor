@@ -72,6 +72,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Prepare CI discovery placeholders
+        # Real host inventories are local-only; empty target files are sufficient for syntax validation.
+        run: |
+          mkdir -p prometheus/targets
+          printf '[]\n' > prometheus/targets/windows-servers.local.yml
+          printf '[]\n' > prometheus/targets/ping-targets.local.yml
       - name: Validate Prometheus configuration with promtool
         run: |
           docker run --rm --entrypoint=/bin/promtool \
