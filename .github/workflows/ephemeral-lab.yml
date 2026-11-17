@@ -1,0 +1,190 @@
+# Disposable GitHub-hosted VM demonstration. No infrastructure secrets or live hosts.
+name: Ephemeral Monitoring Lab
+
+on:
+  push:
+    branches:
+      - feature
+      - 'feature/**'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ephemeral-lab-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  COMPOSE_PROJECT_NAME: lab-${{ github.run_id }}-${{ github.run_attempt }}
+
+jobs:
+  validate:
+    name: '01 - Lab configuration tests'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout feature code
+        uses: actions/checkout@v4
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install YAML test dependency
+        run: python -m pip install PyYAML==6.0.2
+      - name: Validate lab configuration and isolation
+        run: python -m unittest discover -s lab/tests -p 'test_*.py' -v
+      - name: Validate Compose configuration
+        run: docker compose -f lab/docker-compose.yml config --quiet
+      - name: Validate Prometheus syntax (official promtool)
+        run: |
+          docker run --rm --entrypoint=/bin/promtool \
+            -v "$PWD/lab/prometheus.yml:/etc/prometheus/prometheus.yml:ro" \
+            prom/prometheus:v3.5.0 check config /etc/prometheus/prometheus.yml
+      - name: Add reviewer summary
+        if: always()
+        run: |
+          echo '### 01 - Configuration' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Checked lab isolation, dashboard JSON, target definitions, Docker Compose and Prometheus syntax.' >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: '02 - Fresh VM: deploy & test'
+    needs: [validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record the fresh runner identity
+        run: |
+          mkdir -p "$RUNNER_TEMP/ephemeral-evidence"
+          {
+            echo "Job: fresh deploy"
+            echo "GitHub run: $GITHUB_RUN_ID attempt $GITHUB_RUN_ATTEMPT"
+            echo "Runner: $RUNNER_NAME"
+            echo "OS: $RUNNER_OS"
+            echo "Host name: $(hostname)"
+            echo "Commit: $GITHUB_SHA"
+            echo "UTC time: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } | tee "$RUNNER_TEMP/ephemeral-evidence/runner.txt"
+      - name: Create monitoring containers
+        run: docker compose -f lab/docker-compose.yml up -d --pull always
+      - name: Test Grafana, Prometheus and real host metrics
+        run: python lab/scripts/verify.py --output "$RUNNER_TEMP/ephemeral-evidence/deploy-verification.json"
+      - name: Record container inventory and logs
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/ephemeral-evidence"
+          docker compose -f lab/docker-compose.yml ps -a > "$RUNNER_TEMP/ephemeral-evidence/docker-ps.txt" || true
+          docker compose -f lab/docker-compose.yml logs --no-color --tail 120 > "$RUNNER_TEMP/ephemeral-evidence/docker-logs.txt" 2>&1 || true
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephemeral-deploy-${{ github.run_id }}
+          path: ${{ runner.temp }}/ephemeral-evidence/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Remove temporary stack
+        if: always()
+        run: docker compose -f lab/docker-compose.yml down --volumes --remove-orphans || true
+      - name: Add reviewer summary
+        if: always()
+        run: |
+          echo '### 02 - Disposable hosted VM' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Launched Grafana, Prometheus and Linux Node Exporter; verified actual CPU, RAM, disk and network metrics.' >> "$GITHUB_STEP_SUMMARY"
+          echo "Evidence artifact: \`ephemeral-deploy-${GITHUB_RUN_ID}\`" >> "$GITHUB_STEP_SUMMARY"
+
+  replace:
+    name: '03 - Fresh VM: destroy & replace'
+    needs: [validate, deploy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record the independent fresh runner
+        run: |
+          mkdir -p "$RUNNER_TEMP/ephemeral-evidence"
+          {
+            echo "Job: replacement test (a different GitHub-hosted VM than deploy job)"
+            echo "Runner: $RUNNER_NAME"
+            echo "Host name: $(hostname)"
+            echo "GitHub run: $GITHUB_RUN_ID"
+            echo "UTC time: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } | tee "$RUNNER_TEMP/ephemeral-evidence/runner.txt"
+      - name: Deploy version A and verify
+        run: |
+          docker compose -f lab/docker-compose.yml up -d --pull always
+          python lab/scripts/verify.py --output "$RUNNER_TEMP/ephemeral-evidence/before.json"
+          docker compose -f lab/docker-compose.yml ps -q prometheus > "$RUNNER_TEMP/ephemeral-evidence/before-container-id.txt"
+      - name: Destroy the entire disposable deployment
+        run: docker compose -f lab/docker-compose.yml down --volumes --remove-orphans
+      - name: Rebuild version B from the exact same source
+        run: |
+          docker compose -f lab/docker-compose.yml up -d
+          python lab/scripts/verify.py --output "$RUNNER_TEMP/ephemeral-evidence/after.json"
+          docker compose -f lab/docker-compose.yml ps -q prometheus > "$RUNNER_TEMP/ephemeral-evidence/after-container-id.txt"
+          before=$(cat "$RUNNER_TEMP/ephemeral-evidence/before-container-id.txt")
+          after=$(cat "$RUNNER_TEMP/ephemeral-evidence/after-container-id.txt")
+          if [[ -z "$before" || -z "$after" || "$before" == "$after" ]]; then
+            echo 'FAIL: Prometheus container was not replaced' >&2
+            exit 1
+          fi
+          echo "Old container: $before" | tee "$RUNNER_TEMP/ephemeral-evidence/replacement.txt"
+          echo "New container: $after" | tee -a "$RUNNER_TEMP/ephemeral-evidence/replacement.txt"
+          echo 'PASS: completely new container ID and healthy monitoring after rebuild' | tee -a "$RUNNER_TEMP/ephemeral-evidence/replacement.txt"
+      - name: Record container inventory and logs
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/ephemeral-evidence"
+          docker compose -f lab/docker-compose.yml ps -a > "$RUNNER_TEMP/ephemeral-evidence/docker-ps.txt" || true
+          docker compose -f lab/docker-compose.yml logs --no-color --tail 120 > "$RUNNER_TEMP/ephemeral-evidence/docker-logs.txt" 2>&1 || true
+      - name: Upload replacement evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ephemeral-replacement-${{ github.run_id }}
+          path: ${{ runner.temp }}/ephemeral-evidence/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Remove temporary stack
+        if: always()
+        run: docker compose -f lab/docker-compose.yml down --volumes --remove-orphans || true
+      - name: Add reviewer summary
+        if: always()
+        run: |
+          echo '### 03 - Replacement demonstration' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Started a separate hosted VM, verified monitoring, removed every lab container and volume, and rebuilt a new set from the same files.' >> "$GITHUB_STEP_SUMMARY"
+          echo "Evidence artifact: \`ephemeral-replacement-${GITHUB_RUN_ID}\`" >> "$GITHUB_STEP_SUMMARY"
+
+  quality-gate:
+    name: '04 - Reproducibility quality gate'
+    needs: [validate, deploy, replace]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check all stages
+        env:
+          VALIDATE: ${{ needs.validate.result }}
+          DEPLOY: ${{ needs.deploy.result }}
+          REPLACE: ${{ needs.replace.result }}
+        run: |
+          {
+            echo '## Ephemeral lab - test summary'
+            echo '| Stage | Result |'
+            echo '| --- | --- |'
+            echo "| Config tests | $VALIDATE |"
+            echo "| Fresh VM deployment | $DEPLOY |"
+            echo "| Destruction and replacement | $REPLACE |"
+            echo ''
+            echo 'This demonstrates disposable GitHub-hosted execution and replaceable Docker workloads.'
+            echo 'It does **not** prove that Terraform or custom VM images provisioned the underlying GitHub-owned VM.'
+            echo 'No deployment to college infrastructure, and no changes to the main monitoring system.'
+          } >> "$GITHUB_STEP_SUMMARY"
+          [[ "$VALIDATE" == success && "$DEPLOY" == success && "$REPLACE" == success ]]
