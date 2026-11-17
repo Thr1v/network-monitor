@@ -1,3 +1,5 @@
 .env
 *.log
 snmp-exporter/snmp.yml
+/prometheus/targets/*.local.yml
+/prometheus/targets/*.local.yaml
