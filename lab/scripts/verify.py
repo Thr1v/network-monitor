@@ -5,17 +5,19 @@ Uses standard library only. Test runs inside the GitHub-hosted VM (not the
 container), accessing ports bound to loopback. Writes evidence JSON if requested.
 """
 import argparse
+import base64
 import json
 import os
 from pathlib import Path
 import sys
 import time
 from urllib.parse import urlencode
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 
 
-def get_json(url, timeout=5):
-    with urlopen(url, timeout=timeout) as response:
+def get_json(url, timeout=5, headers=None):
+    request = Request(url, headers=headers or {})
+    with urlopen(request, timeout=timeout) as response:
         if response.status != 200:
             raise RuntimeError(f'{url}: HTTP {response.status}')
         return json.load(response)
@@ -29,10 +31,38 @@ def query(prometheus, expr):
     return data['data']['result']
 
 
+def check_grafana_provisioning(grafana):
+    """Verify actual provisioned dashboard + datasource, not merely Grafana health.
+
+    Demo-only credentials correspond to lab/docker-compose.yml. Override with
+    LAB_GRAFANA_USER and LAB_GRAFANA_PASSWORD for alternative lab settings.
+    Never log the Authorization header or production credentials.
+    """
+    user = os.getenv('LAB_GRAFANA_USER', 'lab-admin')
+    password = os.getenv('LAB_GRAFANA_PASSWORD', 'lab-only-not-for-production')
+    token = base64.b64encode(f'{user}:{password}'.encode('utf-8')).decode('ascii')
+    headers = {'Authorization': f'Basic {token}'}
+
+    uid = 'ephemeral-monitoring-lab'
+    response = get_json(f'{grafana}/api/dashboards/uid/{uid}', headers=headers)
+    dashboard = response.get('dashboard', {})
+    panels = dashboard.get('panels', [])
+    if dashboard.get('uid') != uid or len(panels) < 4:
+        raise RuntimeError('Expected Grafana lab dashboard was not provisioned correctly')
+
+    source = get_json(f'{grafana}/api/datasources/uid/prometheus', headers=headers)
+    if source.get('uid') != 'prometheus' or source.get('type') != 'prometheus':
+        raise RuntimeError('Expected Prometheus datasource was not provisioned')
+
+    return {'dashboard_uid': uid, 'dashboard_title': dashboard.get('title', ''),
+            'dashboard_panels': len(panels), 'datasource_uid': source['uid']}
+
+
 def check(grafana, prometheus):
     health = get_json(f'{grafana}/api/health')
     if health.get('database') != 'ok':
         raise RuntimeError(f'Grafana database not healthy: {health}')
+    provisioned = check_grafana_provisioning(grafana)
     ready = get_json(f'{prometheus}/api/v1/status/buildinfo')
     if ready.get('status') != 'success':
         raise RuntimeError('Prometheus API not ready')
@@ -50,8 +80,9 @@ def check(grafana, prometheus):
         if not results:
             raise RuntimeError(f'Missing host metrics: {metric}')
         observations[metric] = len(results)
-    return {'grafana_database': 'ok', 'prometheus': 'ready',
-            'node_exporter': 'UP', 'metrics_series': observations,
+    return {'grafana_database': 'ok', 'grafana_provisioning': provisioned,
+            'prometheus': 'ready', 'node_exporter': 'UP',
+            'metrics_series': observations,
             'runner_name': os.getenv('RUNNER_NAME', 'local')}
 
 
