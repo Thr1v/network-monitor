@@ -1,2 +1,21 @@
 # This local-only file is intentionally Git-ignored. Add ping targets here.
-[]
+- targets: ["172.20.6.225"]
+  labels:
+    host: "Dans-PC"
+    location: "IT Office"
+
+- targets: ["172.20.2.11"]
+  labels:
+    host: "S-IDP"
+    location: "Server Infrastructure"
+
+- targets: ["172.21.2.3"]
+  labels:
+    host: "S-STFS"
+    location: "Server Infrastructure"
+
+- targets: ["172.20.2.102"]
+  labels:
+    host: "S-Papercut"
+    location: "Server Infrastructure"
+

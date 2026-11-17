@@ -1,3 +1,26 @@
 # This local-only file is intentionally Git-ignored; do not commit internal addresses.
 # Copy entries from windows-servers.example.yml and replace the example addresses.
-[]
+
+# Local monitoring PC
+- targets: ["host.docker.internal:9182"]
+  labels:
+    host: "Dans-PC"
+    location: "IT Office"
+
+# Resources server
+- targets: ["172.20.2.11:9182"]
+  labels:
+    host: "S-IDP"
+    location: "Server Infrastructure"
+
+# Student file share server
+- targets: ["172.21.2.3:9182"]
+  labels:
+    host: "S-STFS"
+    location: "Server Infrastructure"
+
+# PaperCut server
+- targets: ["172.20.2.102:9182"]
+  labels:
+    host: "S-Papercut"
+    location: "Server Infrastructure"

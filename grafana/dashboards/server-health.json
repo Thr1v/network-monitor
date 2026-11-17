@@ -14,6 +14,929 @@
       "panel-1": {
         "kind": "Panel",
         "spec": {
+          "id": 1,
+          "title": "",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "### SINGLE-SERVER DIAGNOSTICS · CPU / RAM / GPU / DISK / NETWORK / PING  \n[← Back to **Fleet Overview**](/d/server-fleet-overview/windows-server-fleet-overview) · Select one **Host** above to investigate. For all servers at once, use Fleet Overview."
+              }
+            }
+          }
+        }
+      },
+      "panel-3": {
+        "kind": "Panel",
+        "spec": {
+          "id": 3,
+          "title": "CPU used",
+          "description": "5-minute CPU busy time. Amber >=75%; critical >=90%.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "gauge",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 75,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 90,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "minVizHeight": 75,
+                "minVizWidth": 75,
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+              }
+            }
+          }
+        }
+      },
+      "panel-4": {
+        "kind": "Panel",
+        "spec": {
+          "id": 4,
+          "title": "RAM used",
+          "description": "Physical memory used, based on available / total memory. Amber >=80%; critical >=90%.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "100 * (1 - windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"})",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "gauge",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 90,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "minVizHeight": 75,
+                "minVizWidth": 75,
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+              }
+            }
+          }
+        }
+      },
+      "panel-8": {
+        "kind": "Panel",
+        "spec": {
+          "id": 8,
+          "title": "GPU 3D load",
+          "description": "Approximate 3D engine activity from Windows GPU performance counters, capped at 100% per adapter. Requires the optional GPU collector.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])), 100)",
+                        "legendFormat": "{{host}} GPU {{phys}}",
+                        "range": false,
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "gauge",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 85,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 95,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "minVizHeight": 75,
+                "minVizWidth": 75,
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+              }
+            }
+          }
+        }
+      },
+      "panel-22": {
+        "kind": "Panel",
+        "spec": {
+          "id": 22,
+          "title": "Disk used · $volume",
+          "description": "Used capacity for the selected drive; amber >=80%, red >=90%. Select one host for a single-machine reading.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"$volume\"} / windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"$volume\"})",
+                        "legendFormat": "{{host}} {{volume}}",
+                        "range": false,
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "gauge",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 90,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "minVizHeight": 75,
+                "minVizWidth": 75,
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+              }
+            }
+          }
+        }
+      },
+      "panel-23": {
+        "kind": "Panel",
+        "spec": {
+          "id": 23,
+          "title": "Busiest NIC utilisation",
+          "description": "Highest interface utilisation as a percentage of its reported link speed; ignores NICs with unknown/zero bandwidth.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "clamp_max(max by (host) (100 * rate(windows_net_bytes_total{job=\"windows-servers\",host=~\"$host\"}[5m]) / (windows_net_current_bandwidth_bytes{job=\"windows-servers\",host=~\"$host\"} > 0)), 100)",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "gauge",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 70,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 90,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "minVizHeight": 75,
+                "minVizWidth": 75,
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+              }
+            }
+          }
+        }
+      },
+      "panel-5": {
+        "kind": "Panel",
+        "spec": {
+          "id": 5,
+          "title": "Ping reachable",
+          "description": "Most recent ICMP probe: 1 success, 0 failed. This checks reachability, independently of Exporter.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "probe_success{job=\"icmp-ping\",host=~\"$host\"}",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "red"
+                      },
+                      {
+                        "value": 1,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "unit": "short",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            }
+          }
+        }
+      },
+      "panel-9": {
+        "kind": "Panel",
+        "spec": {
+          "id": 9,
+          "title": "GPU VRAM used",
+          "description": "Percentage of available dedicated GPU VRAM in use, where the GPU and driver expose physical VRAM capacity. Orange >=80%, red >=95%. Integrated/shared GPUs may show No data.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "clamp_max(100 * (windows_gpu_adapter_memory_dedicated_bytes{job=\"windows-servers\",host=~\"$host\"} / on(job,instance,host,luid,device_id) group_left windows_gpu_dedicated_video_memory_size_bytes{job=\"windows-servers\",host=~\"$host\"}), 100)",
+                        "legendFormat": "{{host}} GPU {{phys}}",
+                        "range": false,
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "gauge",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 95,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "minVizHeight": 75,
+                "minVizWidth": 75,
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+              }
+            }
+          }
+        }
+      },
+      "panel-10": {
+        "kind": "Panel",
+        "spec": {
+          "id": 10,
+          "title": "GPU temperature",
+          "description": "Optional hardware/driver-dependent GPU temperature. Thresholds are examples: amber >=75 °C; critical >=85 °C. Tune per GPU.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"}",
+                        "legendFormat": "{{host}} GPU {{phys}}",
+                        "range": false,
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "gauge",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 75,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 85,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "unit": "celsius",
+                  "min": 0,
+                  "max": 110,
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "minVizHeight": 75,
+                "minVizWidth": 75,
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+              }
+            }
+          }
+        }
+      },
+      "panel-24": {
+        "kind": "Panel",
+        "spec": {
+          "id": 24,
+          "title": "Free disk · $volume",
+          "description": "Free bytes on selected drive. Select one host to see that machine. For alerting prefer per-volume minimum free bytes.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"$volume\"}",
+                        "legendFormat": "{{host}} {{volume}}",
+                        "range": false,
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "red"
+                      },
+                      {
+                        "value": 10737418240,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 21474836480,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "unit": "bytes",
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "min": 0
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            }
+          }
+        }
+      },
+      "panel-25": {
+        "kind": "Panel",
+        "spec": {
+          "id": 25,
+          "title": "Busiest NIC traffic",
+          "description": "Current receive plus transmit rate on the busiest interface in bits per second (5-minute rate).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "8 * max by (host) (rate(windows_net_bytes_total{job=\"windows-servers\",host=~\"$host\"}[5m]))",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "unit": "bps",
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "min": 0
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            }
+          }
+        }
+      },
+      "panel-2": {
+        "kind": "Panel",
+        "spec": {
+          "id": 2,
+          "title": "Exporter online",
+          "description": "Prometheus can scrape Windows Exporter: 1 = healthy, 0 = unavailable.",
+          "links": [],
           "data": {
             "kind": "QueryGroup",
             "spec": {
@@ -41,33 +964,34 @@
                   }
                 }
               ],
-              "queryOptions": {},
-              "transformations": []
+              "transformations": [],
+              "queryOptions": {}
             }
           },
-          "description": "1 = metrics being collected; 0 = scrape failure. No data means no matching targets.",
-          "id": 1,
-          "links": [],
-          "title": "Server exporter availability",
           "vizConfig": {
-            "group": "stat",
             "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.2",
             "spec": {
               "fieldConfig": {
                 "defaults": {
-                  "unit": "short",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "red",
-                        "value": 0
+                        "value": 0,
+                        "color": "red"
                       },
                       {
-                        "color": "green",
-                        "value": 1
+                        "value": 1,
+                        "color": "green"
                       }
                     ]
+                  },
+                  "unit": "short",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "thresholds"
                   }
                 },
                 "overrides": []
@@ -75,8 +999,8 @@
               "options": {
                 "colorMode": "background",
                 "graphMode": "none",
-                "justifyMode": "center",
-                "orientation": "horizontal",
+                "justifyMode": "auto",
+                "orientation": "auto",
                 "reduceOptions": {
                   "calcs": [
                     "lastNotNull"
@@ -87,14 +1011,139 @@
                 "textMode": "auto",
                 "wideLayout": true
               }
-            },
-            "version": "13.0.2"
+            }
           }
         }
       },
-      "panel-2": {
+      "panel-26": {
         "kind": "Panel",
         "spec": {
+          "id": 26,
+          "title": "Ping latency",
+          "description": "ICMP RTT in milliseconds, for successful probes only. No reading is expected while the ping check is failing.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "(1000 * probe_icmp_duration_seconds{job=\"icmp-ping\",host=~\"$host\",phase=\"rtt\"}) and on (instance,host) (probe_success{job=\"icmp-ping\",host=~\"$host\"} == 1)",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 50,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 150,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "unit": "ms",
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "min": 0
+                },
+                "overrides": []
+              },
+              "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "textMode": "auto",
+                "wideLayout": true
+              }
+            }
+          }
+        }
+      },
+      "panel-27": {
+        "kind": "Panel",
+        "spec": {
+          "id": 27,
+          "title": "",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "### RESOURCE TRENDS  ·  historical CPU, RAM and GPU performance"
+              }
+            }
+          }
+        }
+      },
+      "panel-6": {
+        "kind": "Panel",
+        "spec": {
+          "id": 6,
+          "title": "CPU & RAM history",
+          "description": "CPU and RAM percentage over the selected time range; useful for sustained pressure vs short spikes.",
+          "links": [],
           "data": {
             "kind": "QueryGroup",
             "spec": {
@@ -112,57 +1161,83 @@
                       "spec": {
                         "editorMode": "code",
                         "expr": "100 * (1 - avg by (host) (rate(windows_cpu_time_seconds_total{job=\"windows-servers\",host=~\"$host\",mode=\"idle\"}[5m])))",
-                        "legendFormat": "{{host}}",
-                        "range": true
+                        "legendFormat": "{{host}} CPU",
+                        "range": true,
+                        "instant": false
                       },
                       "version": "v0"
                     },
                     "refId": "A"
                   }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "100 * (1 - windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"})",
+                        "legendFormat": "{{host}} RAM",
+                        "range": true,
+                        "instant": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "B"
+                  }
                 }
               ],
-              "queryOptions": {},
-              "transformations": []
+              "transformations": [],
+              "queryOptions": {}
             }
           },
-          "description": "CPU busy time averaged over logical processors.",
-          "id": 2,
-          "links": [],
-          "title": "CPU utilisation (%)",
           "vizConfig": {
-            "group": "timeseries",
             "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.0.2",
             "spec": {
               "fieldConfig": {
                 "defaults": {
-                  "unit": "percent",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": 0
+                        "value": 0,
+                        "color": "green"
                       },
                       {
-                        "color": "orange",
-                        "value": 80
+                        "value": 80,
+                        "color": "orange"
                       },
                       {
-                        "color": "red",
-                        "value": 90
+                        "value": 90,
+                        "color": "red"
                       }
                     ]
                   },
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
                   "color": {
                     "mode": "palette-classic"
                   },
                   "custom": {
                     "drawStyle": "line",
                     "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
+                    "fillOpacity": 12,
+                    "showPoints": "never",
                     "spanNulls": false,
-                    "axisPlacement": "auto"
+                    "axisPlacement": "auto",
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
                   }
                 },
                 "overrides": []
@@ -182,14 +1257,17 @@
                   "sort": "none"
                 }
               }
-            },
-            "version": "13.0.2"
+            }
           }
         }
       },
-      "panel-3": {
+      "panel-28": {
         "kind": "Panel",
         "spec": {
+          "id": 28,
+          "title": "GPU 3D history",
+          "description": "GPU engine activity over time (optional; requires GPU collector and supported driver).",
+          "links": [],
           "data": {
             "kind": "QueryGroup",
             "spec": {
@@ -206,9 +1284,10 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "100 * (1 - windows_memory_available_bytes{job=\"windows-servers\",host=~\"$host\"} / windows_memory_physical_total_bytes{job=\"windows-servers\",host=~\"$host\"})",
-                        "legendFormat": "{{host}}",
-                        "range": true
+                        "expr": "clamp_max(100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m])), 100)",
+                        "legendFormat": "{{host}} GPU {{phys}}",
+                        "range": true,
+                        "instant": false
                       },
                       "version": "v0"
                     },
@@ -216,48 +1295,51 @@
                   }
                 }
               ],
-              "queryOptions": {},
-              "transformations": []
+              "transformations": [],
+              "queryOptions": {}
             }
           },
-          "description": "Uses physical RAM minus memory available, not commit percentage.",
-          "id": 3,
-          "links": [],
-          "title": "Physical RAM used (%)",
           "vizConfig": {
-            "group": "timeseries",
             "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.0.2",
             "spec": {
               "fieldConfig": {
                 "defaults": {
-                  "unit": "percent",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": 0
+                        "value": 0,
+                        "color": "green"
                       },
                       {
-                        "color": "orange",
-                        "value": 80
+                        "value": 85,
+                        "color": "orange"
                       },
                       {
-                        "color": "red",
-                        "value": 90
+                        "value": 95,
+                        "color": "red"
                       }
                     ]
                   },
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
                   "color": {
                     "mode": "palette-classic"
                   },
                   "custom": {
                     "drawStyle": "line",
                     "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
+                    "fillOpacity": 12,
+                    "showPoints": "never",
                     "spanNulls": false,
-                    "axisPlacement": "auto"
+                    "axisPlacement": "auto",
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
                   }
                 },
                 "overrides": []
@@ -277,14 +1359,150 @@
                   "sort": "none"
                 }
               }
-            },
-            "version": "13.0.2"
+            }
           }
         }
       },
-      "panel-4": {
+      "panel-29": {
         "kind": "Panel",
         "spec": {
+          "id": 29,
+          "title": "GPU temperature history",
+          "description": "GPU sensor temperature over time (not available on all hardware).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"}",
+                        "legendFormat": "{{host}} GPU {{phys}}",
+                        "range": true,
+                        "instant": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 75,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 85,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "unit": "celsius",
+                  "min": 0,
+                  "decimals": 1,
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "drawStyle": "line",
+                    "lineWidth": 2,
+                    "fillOpacity": 12,
+                    "showPoints": "never",
+                    "spanNulls": false,
+                    "axisPlacement": "auto",
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "legend": {
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true,
+                  "calcs": [
+                    "lastNotNull",
+                    "max"
+                  ]
+                },
+                "tooltip": {
+                  "mode": "multi",
+                  "sort": "none"
+                }
+              }
+            }
+          }
+        }
+      },
+      "panel-30": {
+        "kind": "Panel",
+        "spec": {
+          "id": 30,
+          "title": "",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "### STORAGE DETAILS  ·  per-volume capacity and read/write activity"
+              }
+            }
+          }
+        }
+      },
+      "panel-12": {
+        "kind": "Panel",
+        "spec": {
+          "id": 12,
+          "title": "Disk usage by drive",
+          "description": "Each drive is a separate capacity bar. Amber >=80% full; critical >=90% full.",
+          "links": [],
           "data": {
             "kind": "QueryGroup",
             "spec": {
@@ -303,7 +1521,8 @@
                         "editorMode": "code",
                         "expr": "100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"})",
                         "legendFormat": "{{host}} {{volume}}",
-                        "range": true
+                        "range": false,
+                        "instant": true
                       },
                       "version": "v0"
                     },
@@ -311,75 +1530,67 @@
                   }
                 }
               ],
-              "queryOptions": {},
-              "transformations": []
+              "transformations": [],
+              "queryOptions": {}
             }
           },
-          "description": "Drive-letter volumes only. Windows free-space performance counters may lag by 10-15 minutes.",
-          "id": 4,
-          "links": [],
-          "title": "Volume capacity used (%)",
           "vizConfig": {
-            "group": "timeseries",
             "kind": "VizConfig",
+            "group": "bargauge",
+            "version": "13.0.2",
             "spec": {
               "fieldConfig": {
                 "defaults": {
-                  "unit": "percent",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": 0
+                        "value": 0,
+                        "color": "green"
                       },
                       {
-                        "color": "orange",
-                        "value": 85
+                        "value": 80,
+                        "color": "orange"
                       },
                       {
-                        "color": "red",
-                        "value": 95
+                        "value": 90,
+                        "color": "red"
                       }
                     ]
                   },
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
                   "color": {
-                    "mode": "palette-classic"
-                  },
-                  "custom": {
-                    "drawStyle": "line",
-                    "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
-                    "spanNulls": false,
-                    "axisPlacement": "auto"
+                    "mode": "thresholds"
                   }
                 },
                 "overrides": []
               },
               "options": {
-                "legend": {
-                  "displayMode": "table",
-                  "placement": "bottom",
-                  "showLegend": true,
+                "displayMode": "basic",
+                "orientation": "horizontal",
+                "reduceOptions": {
                   "calcs": [
-                    "lastNotNull",
-                    "max"
-                  ]
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
                 },
-                "tooltip": {
-                  "mode": "multi",
-                  "sort": "none"
-                }
+                "showUnfilled": true
               }
-            },
-            "version": "13.0.2"
+            }
           }
         }
       },
-      "panel-5": {
+      "panel-13": {
         "kind": "Panel",
         "spec": {
+          "id": 13,
+          "title": "Selected volume · $volume used vs free",
+          "description": "Donut aggregates the selected volume across all selected hosts. Choose one host and one volume for a single physical drive.",
+          "links": [],
           "data": {
             "kind": "QueryGroup",
             "spec": {
@@ -396,77 +1607,137 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"}",
-                        "legendFormat": "{{host}} {{volume}}",
-                        "range": true
+                        "expr": "sum(windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"$volume\"} - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"$volume\"})",
+                        "legendFormat": "Used",
+                        "range": false,
+                        "instant": true
                       },
                       "version": "v0"
                     },
                     "refId": "A"
                   }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "sum(windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"$volume\"})",
+                        "legendFormat": "Free",
+                        "range": false,
+                        "instant": true
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "B"
+                  }
                 }
               ],
-              "queryOptions": {},
-              "transformations": []
+              "transformations": [],
+              "queryOptions": {}
             }
           },
-          "description": "Shows bytes available on each drive-letter volume.",
-          "id": 5,
-          "links": [],
-          "title": "Free disk space",
           "vizConfig": {
-            "group": "timeseries",
             "kind": "VizConfig",
+            "group": "piechart",
+            "version": "13.0.2",
             "spec": {
               "fieldConfig": {
                 "defaults": {
-                  "unit": "bytes",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": 0
+                        "value": 0,
+                        "color": "green"
                       }
                     ]
                   },
+                  "unit": "bytes",
+                  "decimals": 1,
                   "color": {
                     "mode": "palette-classic"
-                  },
-                  "custom": {
-                    "drawStyle": "line",
-                    "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
-                    "spanNulls": false,
-                    "axisPlacement": "auto"
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Used"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "#E55A50"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Free"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "mode": "fixed",
+                          "fixedColor": "#5AAE87"
+                        }
+                      }
+                    ]
+                  }
+                ]
               },
               "options": {
+                "pieType": "donut",
+                "displayLabels": [
+                  "name",
+                  "percent"
+                ],
                 "legend": {
                   "displayMode": "table",
-                  "placement": "bottom",
+                  "placement": "right",
                   "showLegend": true,
-                  "calcs": [
-                    "lastNotNull",
-                    "max"
+                  "values": [
+                    "value",
+                    "percent"
                   ]
                 },
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "sort": "desc",
                 "tooltip": {
-                  "mode": "multi",
+                  "mode": "single",
                   "sort": "none"
                 }
               }
-            },
-            "version": "13.0.2"
+            }
           }
         }
       },
-      "panel-6": {
+      "panel-14": {
         "kind": "Panel",
         "spec": {
+          "id": 14,
+          "title": "Disk read/write history",
+          "description": "Retained for I/O spikes and workload troubleshooting, rather than as the main storage-capacity indicator.",
+          "links": [],
           "data": {
             "kind": "QueryGroup",
             "spec": {
@@ -485,7 +1756,8 @@
                         "editorMode": "code",
                         "expr": "rate(windows_logical_disk_read_bytes_total{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"}[5m])",
                         "legendFormat": "{{host}} {{volume}} read",
-                        "range": true
+                        "range": true,
+                        "instant": false
                       },
                       "version": "v0"
                     },
@@ -506,7 +1778,8 @@
                         "editorMode": "code",
                         "expr": "rate(windows_logical_disk_write_bytes_total{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"}[5m])",
                         "legendFormat": "{{host}} {{volume}} write",
-                        "range": true
+                        "range": true,
+                        "instant": false
                       },
                       "version": "v0"
                     },
@@ -514,40 +1787,41 @@
                   }
                 }
               ],
-              "queryOptions": {},
-              "transformations": []
+              "transformations": [],
+              "queryOptions": {}
             }
           },
-          "description": "Logical drive read/write throughput in bytes per second; this is not a direct physical drive health test.",
-          "id": 6,
-          "links": [],
-          "title": "Disk read / write throughput",
           "vizConfig": {
-            "group": "timeseries",
             "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.0.2",
             "spec": {
               "fieldConfig": {
                 "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
                   "unit": "Bps",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": 0
-                      }
-                    ]
-                  },
+                  "decimals": 1,
                   "color": {
                     "mode": "palette-classic"
                   },
                   "custom": {
                     "drawStyle": "line",
                     "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
+                    "fillOpacity": 12,
+                    "showPoints": "never",
                     "spanNulls": false,
-                    "axisPlacement": "auto"
+                    "axisPlacement": "auto",
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
                   }
                 },
                 "overrides": []
@@ -567,188 +1841,49 @@
                   "sort": "none"
                 }
               }
-            },
-            "version": "13.0.2"
+            }
           }
         }
       },
-      "panel-7": {
+      "panel-31": {
         "kind": "Panel",
         "spec": {
+          "id": 31,
+          "title": "",
+          "description": "",
+          "links": [],
           "data": {
             "kind": "QueryGroup",
             "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "prometheus"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "editorMode": "code",
-                        "expr": "100 * sum by (host,phys) (rate(windows_gpu_engine_time_seconds_total{job=\"windows-servers\",host=~\"$host\",engtype=\"3D\"}[5m]))",
-                        "legendFormat": "{{host}} GPU {{phys}}",
-                        "range": true
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "A"
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
             }
           },
-          "description": "Optional gpu collector + compatible WDDM driver required. Summed process/engine activity is indicative, not a guaranteed 0-100% hardware occupancy reading.",
-          "id": 7,
-          "links": [],
-          "title": "GPU 3D engine activity (%)",
           "vizConfig": {
-            "group": "timeseries",
             "kind": "VizConfig",
+            "group": "text",
+            "version": "13.0.2",
             "spec": {
               "fieldConfig": {
-                "defaults": {
-                  "unit": "percent",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": 0
-                      }
-                    ]
-                  },
-                  "color": {
-                    "mode": "palette-classic"
-                  },
-                  "custom": {
-                    "drawStyle": "line",
-                    "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
-                    "spanNulls": false,
-                    "axisPlacement": "auto"
-                  }
-                },
+                "defaults": {},
                 "overrides": []
               },
               "options": {
-                "legend": {
-                  "displayMode": "table",
-                  "placement": "bottom",
-                  "showLegend": true,
-                  "calcs": [
-                    "lastNotNull",
-                    "max"
-                  ]
-                },
-                "tooltip": {
-                  "mode": "multi",
-                  "sort": "none"
-                }
+                "mode": "markdown",
+                "content": "### NETWORK & CONNECTIVITY  ·  interface traffic, errors and probe history"
               }
-            },
-            "version": "13.0.2"
-          }
-        }
-      },
-      "panel-8": {
-        "kind": "Panel",
-        "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "prometheus"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "editorMode": "code",
-                        "expr": "windows_gpu_adapter_memory_dedicated_bytes{job=\"windows-servers\",host=~\"$host\"}",
-                        "legendFormat": "{{host}} GPU {{phys}}",
-                        "range": true
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "A"
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
             }
-          },
-          "description": "Optional GPU collector. A server with no supported GPU shows No data, not zero.",
-          "id": 8,
-          "links": [],
-          "title": "GPU dedicated memory in use",
-          "vizConfig": {
-            "group": "timeseries",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "unit": "bytes",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": 0
-                      }
-                    ]
-                  },
-                  "color": {
-                    "mode": "palette-classic"
-                  },
-                  "custom": {
-                    "drawStyle": "line",
-                    "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
-                    "spanNulls": false,
-                    "axisPlacement": "auto"
-                  }
-                },
-                "overrides": []
-              },
-              "options": {
-                "legend": {
-                  "displayMode": "table",
-                  "placement": "bottom",
-                  "showLegend": true,
-                  "calcs": [
-                    "lastNotNull",
-                    "max"
-                  ]
-                },
-                "tooltip": {
-                  "mode": "multi",
-                  "sort": "none"
-                }
-              }
-            },
-            "version": "13.0.2"
           }
         }
       },
-      "panel-9": {
+      "panel-16": {
         "kind": "Panel",
         "spec": {
+          "id": 16,
+          "title": "Network traffic history · received / sent",
+          "description": "Bits per second per NIC. Performance trend for diagnosing unusual load.",
+          "links": [],
           "data": {
             "kind": "QueryGroup",
             "spec": {
@@ -765,9 +1900,10 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "rate(windows_net_bytes_received_total{job=\"windows-servers\",host=~\"$host\"}[5m]) * 8",
-                        "legendFormat": "{{host}} {{nic}} receive",
-                        "range": true
+                        "expr": "8 * rate(windows_net_bytes_received_total{job=\"windows-servers\",host=~\"$host\"}[5m])",
+                        "legendFormat": "{{host}} {{nic}} received",
+                        "range": true,
+                        "instant": false
                       },
                       "version": "v0"
                     },
@@ -786,9 +1922,10 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "rate(windows_net_bytes_sent_total{job=\"windows-servers\",host=~\"$host\"}[5m]) * 8",
-                        "legendFormat": "{{host}} {{nic}} transmit",
-                        "range": true
+                        "expr": "8 * rate(windows_net_bytes_sent_total{job=\"windows-servers\",host=~\"$host\"}[5m])",
+                        "legendFormat": "{{host}} {{nic}} sent",
+                        "range": true,
+                        "instant": false
                       },
                       "version": "v0"
                     },
@@ -796,40 +1933,41 @@
                   }
                 }
               ],
-              "queryOptions": {},
-              "transformations": []
+              "transformations": [],
+              "queryOptions": {}
             }
           },
-          "description": "Bits per second; includes virtual NICs exposed by Windows.",
-          "id": 9,
-          "links": [],
-          "title": "Network receive / transmit throughput",
           "vizConfig": {
-            "group": "timeseries",
             "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.0.2",
             "spec": {
               "fieldConfig": {
                 "defaults": {
-                  "unit": "bps",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": 0
+                        "value": 0,
+                        "color": "green"
                       }
                     ]
                   },
+                  "unit": "bps",
+                  "decimals": 1,
                   "color": {
                     "mode": "palette-classic"
                   },
                   "custom": {
                     "drawStyle": "line",
                     "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
+                    "fillOpacity": 12,
+                    "showPoints": "never",
                     "spanNulls": false,
-                    "axisPlacement": "auto"
+                    "axisPlacement": "auto",
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
                   }
                 },
                 "overrides": []
@@ -849,14 +1987,17 @@
                   "sort": "none"
                 }
               }
-            },
-            "version": "13.0.2"
+            }
           }
         }
       },
-      "panel-10": {
+      "panel-17": {
         "kind": "Panel",
         "spec": {
+          "id": 17,
+          "title": "NIC utilisation by interface",
+          "description": "Percentage of advertised NIC bandwidth in use (receive + transmit); can overstate full-duplex use. Amber >=70%; critical >=90%.",
+          "links": [],
           "data": {
             "kind": "QueryGroup",
             "spec": {
@@ -875,7 +2016,8 @@
                         "editorMode": "code",
                         "expr": "100 * rate(windows_net_bytes_total{job=\"windows-servers\",host=~\"$host\"}[5m]) / windows_net_current_bandwidth_bytes{job=\"windows-servers\",host=~\"$host\"}",
                         "legendFormat": "{{host}} {{nic}}",
-                        "range": true
+                        "range": false,
+                        "instant": true
                       },
                       "version": "v0"
                     },
@@ -883,75 +2025,67 @@
                   }
                 }
               ],
-              "queryOptions": {},
-              "transformations": []
+              "transformations": [],
+              "queryOptions": {}
             }
           },
-          "description": "Throughput relative to Windows reported NIC bandwidth; virtual NIC estimates can be misleading.",
-          "id": 10,
-          "links": [],
-          "title": "Network interface utilisation (%)",
           "vizConfig": {
-            "group": "timeseries",
             "kind": "VizConfig",
+            "group": "bargauge",
+            "version": "13.0.2",
             "spec": {
               "fieldConfig": {
                 "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 70,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 90,
+                        "color": "red"
+                      }
+                    ]
+                  },
                   "unit": "percent",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": 0
-                      },
-                      {
-                        "color": "orange",
-                        "value": 85
-                      },
-                      {
-                        "color": "red",
-                        "value": 95
-                      }
-                    ]
-                  },
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
                   "color": {
-                    "mode": "palette-classic"
-                  },
-                  "custom": {
-                    "drawStyle": "line",
-                    "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
-                    "spanNulls": false,
-                    "axisPlacement": "auto"
+                    "mode": "thresholds"
                   }
                 },
                 "overrides": []
               },
               "options": {
-                "legend": {
-                  "displayMode": "table",
-                  "placement": "bottom",
-                  "showLegend": true,
+                "displayMode": "basic",
+                "orientation": "horizontal",
+                "reduceOptions": {
                   "calcs": [
-                    "lastNotNull",
-                    "max"
-                  ]
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
                 },
-                "tooltip": {
-                  "mode": "multi",
-                  "sort": "none"
-                }
+                "showUnfilled": true
               }
-            },
-            "version": "13.0.2"
+            }
           }
         }
       },
-      "panel-11": {
+      "panel-18": {
         "kind": "Panel",
         "spec": {
+          "id": 18,
+          "title": "NIC errors + discards (15m)",
+          "description": "Total Windows NIC packet errors and discards across interfaces in the past 15 minutes.",
+          "links": [],
           "data": {
             "kind": "QueryGroup",
             "spec": {
@@ -968,363 +2102,79 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "increase(windows_net_packets_received_errors_total{job=\"windows-servers\",host=~\"$host\"}[15m]) + increase(windows_net_packets_outbound_errors_total{job=\"windows-servers\",host=~\"$host\"}[15m])",
-                        "legendFormat": "{{host}} {{nic}} errors",
-                        "range": true
+                        "expr": "sum by (host) ((increase(windows_net_packets_received_errors_total{job=\"windows-servers\",host=~\"$host\"}[15m]) + increase(windows_net_packets_outbound_errors_total{job=\"windows-servers\",host=~\"$host\"}[15m])) + (increase(windows_net_packets_received_discarded_total{job=\"windows-servers\",host=~\"$host\"}[15m]) + increase(windows_net_packets_outbound_discarded_total{job=\"windows-servers\",host=~\"$host\"}[15m])))",
+                        "legendFormat": "{{host}}",
+                        "range": false,
+                        "instant": true
                       },
                       "version": "v0"
                     },
                     "refId": "A"
                   }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "prometheus"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "editorMode": "code",
-                        "expr": "increase(windows_net_packets_received_discarded_total{job=\"windows-servers\",host=~\"$host\"}[15m]) + increase(windows_net_packets_outbound_discarded_total{job=\"windows-servers\",host=~\"$host\"}[15m])",
-                        "legendFormat": "{{host}} {{nic}} discards",
-                        "range": true
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "B"
-                  }
                 }
               ],
-              "queryOptions": {},
-              "transformations": []
+              "transformations": [],
+              "queryOptions": {}
             }
           },
-          "description": "Rising counters can reveal local NIC congestion or link problems.",
-          "id": 11,
-          "links": [],
-          "title": "NIC errors / discards (15m)",
           "vizConfig": {
-            "group": "timeseries",
             "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.2",
             "spec": {
               "fieldConfig": {
                 "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 1,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 10,
+                        "color": "red"
+                      }
+                    ]
+                  },
                   "unit": "short",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": 0
-                      }
-                    ]
-                  },
+                  "decimals": 0,
                   "color": {
-                    "mode": "palette-classic"
-                  },
-                  "custom": {
-                    "drawStyle": "line",
-                    "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
-                    "spanNulls": false,
-                    "axisPlacement": "auto"
+                    "mode": "thresholds"
                   }
                 },
                 "overrides": []
               },
               "options": {
-                "legend": {
-                  "displayMode": "table",
-                  "placement": "bottom",
-                  "showLegend": true,
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
                   "calcs": [
-                    "lastNotNull",
-                    "max"
-                  ]
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
                 },
-                "tooltip": {
-                  "mode": "multi",
-                  "sort": "none"
-                }
+                "textMode": "auto",
+                "wideLayout": true
               }
-            },
-            "version": "13.0.2"
-          }
-        }
-      },
-      "panel-12": {
-        "kind": "Panel",
-        "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "prometheus"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "editorMode": "code",
-                        "expr": "probe_success{job=\"icmp-ping\",host=~\"$host\"}",
-                        "legendFormat": "{{host}}",
-                        "range": true
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "A"
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
             }
-          },
-          "description": "Independent reachability test from the Blackbox Exporter container. 1 success, 0 failure. Configure matching host labels.",
-          "id": 12,
-          "links": [],
-          "title": "ICMP ping result",
-          "vizConfig": {
-            "group": "timeseries",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "unit": "short",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "red",
-                        "value": 0
-                      },
-                      {
-                        "color": "green",
-                        "value": 1
-                      }
-                    ]
-                  },
-                  "color": {
-                    "mode": "palette-classic"
-                  },
-                  "custom": {
-                    "drawStyle": "line",
-                    "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
-                    "spanNulls": false,
-                    "axisPlacement": "auto"
-                  }
-                },
-                "overrides": []
-              },
-              "options": {
-                "legend": {
-                  "displayMode": "table",
-                  "placement": "bottom",
-                  "showLegend": true,
-                  "calcs": [
-                    "lastNotNull",
-                    "max"
-                  ]
-                },
-                "tooltip": {
-                  "mode": "multi",
-                  "sort": "none"
-                }
-              }
-            },
-            "version": "13.0.2"
           }
         }
       },
-      "panel-13": {
+      "panel-19": {
         "kind": "Panel",
         "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "prometheus"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "editorMode": "code",
-                        "expr": "1000 * probe_icmp_duration_seconds{job=\"icmp-ping\",host=~\"$host\",phase=\"rtt\"}",
-                        "legendFormat": "{{host}}",
-                        "range": true
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "A"
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "description": "One ICMP sample per scrape from the monitoring container, milliseconds.",
-          "id": 13,
+          "id": 19,
+          "title": "Missed ICMP probes (24h)",
+          "description": "Count of observed failed probes over 24 hours, not network packet-loss percentage. No longer green when >0.",
           "links": [],
-          "title": "ICMP round-trip latency",
-          "vizConfig": {
-            "group": "timeseries",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "unit": "ms",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": 0
-                      }
-                    ]
-                  },
-                  "color": {
-                    "mode": "palette-classic"
-                  },
-                  "custom": {
-                    "drawStyle": "line",
-                    "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
-                    "spanNulls": false,
-                    "axisPlacement": "auto"
-                  }
-                },
-                "overrides": []
-              },
-              "options": {
-                "legend": {
-                  "displayMode": "table",
-                  "placement": "bottom",
-                  "showLegend": true,
-                  "calcs": [
-                    "lastNotNull",
-                    "max"
-                  ]
-                },
-                "tooltip": {
-                  "mode": "multi",
-                  "sort": "none"
-                }
-              }
-            },
-            "version": "13.0.2"
-          }
-        }
-      },
-      "panel-14": {
-        "kind": "Panel",
-        "spec": {
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "hidden": false,
-                    "query": {
-                      "datasource": {
-                        "name": "prometheus"
-                      },
-                      "group": "prometheus",
-                      "kind": "DataQuery",
-                      "spec": {
-                        "editorMode": "code",
-                        "expr": "100 * avg_over_time(probe_success{job=\"icmp-ping\",host=~\"$host\"}[24h])",
-                        "legendFormat": "{{host}}",
-                        "range": true
-                      },
-                      "version": "v0"
-                    },
-                    "refId": "A"
-                  }
-                }
-              ],
-              "queryOptions": {},
-              "transformations": []
-            }
-          },
-          "description": "Percentage of successful scheduled probes; not a true ICMP packet-loss rate.",
-          "id": 14,
-          "links": [],
-          "title": "ICMP probe success (24h)",
-          "vizConfig": {
-            "group": "timeseries",
-            "kind": "VizConfig",
-            "spec": {
-              "fieldConfig": {
-                "defaults": {
-                  "unit": "percent",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "color": "green",
-                        "value": 0
-                      }
-                    ]
-                  },
-                  "color": {
-                    "mode": "palette-classic"
-                  },
-                  "custom": {
-                    "drawStyle": "line",
-                    "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
-                    "spanNulls": false,
-                    "axisPlacement": "auto"
-                  }
-                },
-                "overrides": []
-              },
-              "options": {
-                "legend": {
-                  "displayMode": "table",
-                  "placement": "bottom",
-                  "showLegend": true,
-                  "calcs": [
-                    "lastNotNull",
-                    "max"
-                  ]
-                },
-                "tooltip": {
-                  "mode": "multi",
-                  "sort": "none"
-                }
-              }
-            },
-            "version": "13.0.2"
-          }
-        }
-      },
-      "panel-15": {
-        "kind": "Panel",
-        "spec": {
           "data": {
             "kind": "QueryGroup",
             "spec": {
@@ -1352,38 +2202,47 @@
                   }
                 }
               ],
-              "queryOptions": {},
-              "transformations": []
+              "transformations": [],
+              "queryOptions": {}
             }
           },
-          "description": "Count of scheduled probes returning failure; gaps in collection are not included.",
-          "id": 15,
-          "links": [],
-          "title": "Missed ICMP probes (24h)",
           "vizConfig": {
-            "group": "stat",
             "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.2",
             "spec": {
               "fieldConfig": {
                 "defaults": {
-                  "unit": "short",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": 0
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 1,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 3,
+                        "color": "red"
                       }
                     ]
+                  },
+                  "unit": "short",
+                  "decimals": 0,
+                  "color": {
+                    "mode": "thresholds"
                   }
                 },
                 "overrides": []
               },
               "options": {
-                "colorMode": "background",
+                "colorMode": "value",
                 "graphMode": "none",
-                "justifyMode": "center",
-                "orientation": "horizontal",
+                "justifyMode": "auto",
+                "orientation": "auto",
                 "reduceOptions": {
                   "calcs": [
                     "lastNotNull"
@@ -1394,14 +2253,17 @@
                 "textMode": "auto",
                 "wideLayout": true
               }
-            },
-            "version": "13.0.2"
+            }
           }
         }
       },
-      "panel-16": {
+      "panel-20": {
         "kind": "Panel",
         "spec": {
+          "id": 20,
+          "title": "ICMP failure rate (24h)",
+          "description": "Observed fraction of scheduled probes that failed over 24h. Amber >=1%; critical >=5%. Not a continuous traffic-loss measurement.",
+          "links": [],
           "data": {
             "kind": "QueryGroup",
             "spec": {
@@ -1418,9 +2280,10 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "1000 * probe_icmp_duration_seconds{job=\"icmp-ping\",host=~\"$host\",phase=\"rtt\"}",
+                        "expr": "100 * (1 - avg_over_time(probe_success{job=\"icmp-ping\",host=~\"$host\"}[24h]))",
                         "legendFormat": "{{host}}",
-                        "range": true
+                        "range": false,
+                        "instant": true
                       },
                       "version": "v0"
                     },
@@ -1428,40 +2291,139 @@
                   }
                 }
               ],
-              "queryOptions": {},
-              "transformations": []
+              "transformations": [],
+              "queryOptions": {}
             }
           },
-          "description": "Useful for viewing spikes or irregular paths alongside CPU/network load.",
-          "id": 16,
-          "links": [],
-          "title": "Latency overview (last 6h)",
           "vizConfig": {
-            "group": "timeseries",
             "kind": "VizConfig",
+            "group": "gauge",
+            "version": "13.0.2",
             "spec": {
               "fieldConfig": {
                 "defaults": {
-                  "unit": "ms",
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
                       {
-                        "color": "green",
-                        "value": 0
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 1,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 5,
+                        "color": "red"
                       }
                     ]
                   },
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "decimals": 1,
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "minVizHeight": 75,
+                "minVizWidth": 75,
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+              }
+            }
+          }
+        }
+      },
+      "panel-21": {
+        "kind": "Panel",
+        "spec": {
+          "id": 21,
+          "title": "ICMP latency history",
+          "description": "Round-trip latency in milliseconds from successful Blackbox ICMP probes. A failed probe is tracked above, not treated as zero-ms latency.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "(1000 * probe_icmp_duration_seconds{job=\"icmp-ping\",host=~\"$host\",phase=\"rtt\"}) and on (instance,host) (probe_success{job=\"icmp-ping\",host=~\"$host\"} == 1)",
+                        "legendFormat": "{{host}}",
+                        "range": true,
+                        "instant": false
+                      },
+                      "version": "v0"
+                    },
+                    "refId": "A"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 50,
+                        "color": "orange"
+                      },
+                      {
+                        "value": 150,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "unit": "ms",
+                  "decimals": 1,
                   "color": {
                     "mode": "palette-classic"
                   },
                   "custom": {
                     "drawStyle": "line",
                     "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
+                    "fillOpacity": 12,
+                    "showPoints": "never",
                     "spanNulls": false,
-                    "axisPlacement": "auto"
+                    "axisPlacement": "auto",
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
                   }
                 },
                 "overrides": []
@@ -1481,14 +2443,49 @@
                   "sort": "none"
                 }
               }
-            },
-            "version": "13.0.2"
+            }
           }
         }
       },
-      "panel-17": {
+      "panel-32": {
         "kind": "Panel",
         "spec": {
+          "id": 32,
+          "title": "",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              },
+              "options": {
+                "mode": "markdown",
+                "content": "### INCIDENT TIMELINE & CAPACITY WATCHLIST  ·  when did a host drop out, and which drives need attention?"
+              }
+            }
+          }
+        }
+      },
+      "panel-33": {
+        "kind": "Panel",
+        "spec": {
+          "id": 33,
+          "title": "Host reachability & exporter timeline",
+          "description": "Continuous uptime state for the selected time window. Green = reported UP (1), red = DOWN (0). Missing samples appear as gaps, not confirmed downtime. ICMP and Exporter are independent checks.",
+          "links": [],
           "data": {
             "kind": "QueryGroup",
             "spec": {
@@ -1503,43 +2500,208 @@
                       },
                       "group": "prometheus",
                       "kind": "DataQuery",
+                      "version": "v0",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "windows_gpu_temperature_celsius{job=\"windows-servers\",host=~\"$host\"}",
-                        "legendFormat": "{{host}} GPU {{phys}}",
-                        "range": true
+                        "expr": "up{job=\"windows-servers\",host=~\"$host\"}",
+                        "legendFormat": "{{host}} · Exporter",
+                        "range": true,
+                        "instant": false
+                      }
+                    },
+                    "refId": "A"
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
                       },
-                      "version": "v0"
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "probe_success{job=\"icmp-ping\",host=~\"$host\"}",
+                        "legendFormat": "{{host}} · ICMP ping",
+                        "range": true,
+                        "instant": false
+                      }
+                    },
+                    "refId": "B"
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "state-timeline",
+            "version": "13.0.2",
+            "spec": {
+              "fieldConfig": {
+                "defaults": {
+                  "mappings": [
+                    {
+                      "type": "value",
+                      "options": {
+                        "0": {
+                          "text": "DOWN",
+                          "color": "red"
+                        },
+                        "1": {
+                          "text": "UP",
+                          "color": "green"
+                        }
+                      }
+                    }
+                  ],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "red",
+                        "value": null
+                      },
+                      {
+                        "color": "green",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "lineWidth": 0,
+                    "fillOpacity": 85,
+                    "spanNulls": false,
+                    "insertNulls": false
+                  }
+                },
+                "overrides": []
+              },
+              "options": {
+                "mergeValues": true,
+                "showValue": "never",
+                "alignValue": "center",
+                "rowHeight": 0.8,
+                "legend": {
+                  "showLegend": false,
+                  "displayMode": "list",
+                  "placement": "bottom"
+                },
+                "tooltip": {
+                  "mode": "single",
+                  "sort": "none"
+                },
+                "annotations": {
+                  "multiLane": false,
+                  "clustering": -1
+                }
+              }
+            }
+          }
+        }
+      },
+      "panel-34": {
+        "kind": "Panel",
+        "spec": {
+          "id": 34,
+          "title": "Fullest volumes · capacity watchlist",
+          "description": "Top 15 drive letters by percentage full among selected hosts. This is live capacity, not a historical maximum. Amber >=80% full; red >=90% full.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "hidden": false,
+                    "query": {
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "group": "prometheus",
+                      "kind": "DataQuery",
+                      "version": "v0",
+                      "spec": {
+                        "editorMode": "code",
+                        "expr": "topk(15, 100 * (1 - windows_logical_disk_free_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"} / windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"}))",
+                        "legendFormat": "",
+                        "range": false,
+                        "instant": true,
+                        "format": "table"
+                      }
                     },
                     "refId": "A"
                   }
                 }
               ],
-              "queryOptions": {},
-              "transformations": []
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "filterFieldsByName",
+                  "spec": {
+                    "options": {
+                      "include": {
+                        "names": [
+                          "host",
+                          "volume",
+                          "Value"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "indexByName": {
+                        "host": 0,
+                        "volume": 1,
+                        "Value": 2
+                      },
+                      "renameByName": {
+                        "host": "Server",
+                        "volume": "Volume",
+                        "Value": "Used (%)"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
             }
           },
-          "description": "GPU sensor reporting depends on Windows WDDM 2.4+ and compatible drivers. No data means unsupported/unavailable.",
-          "id": 17,
-          "links": [],
-          "title": "GPU temperature (optional)",
           "vizConfig": {
-            "group": "timeseries",
             "kind": "VizConfig",
+            "group": "table",
+            "version": "13.0.2",
             "spec": {
               "fieldConfig": {
                 "defaults": {
-                  "unit": "celsius",
+                  "color": {
+                    "mode": "thresholds"
+                  },
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
                       {
                         "color": "green",
-                        "value": 0
+                        "value": null
                       },
                       {
                         "color": "orange",
-                        "value": 75
+                        "value": 80
                       },
                       {
                         "color": "red",
@@ -1547,37 +2709,79 @@
                       }
                     ]
                   },
-                  "color": {
-                    "mode": "palette-classic"
-                  },
                   "custom": {
-                    "drawStyle": "line",
-                    "lineWidth": 2,
-                    "fillOpacity": 10,
-                    "showPoints": "auto",
-                    "spanNulls": false,
-                    "axisPlacement": "auto"
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "filterable": false
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Used (%)"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "percent"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 1
+                      },
+                      {
+                        "id": "min",
+                        "value": 0
+                      },
+                      {
+                        "id": "max",
+                        "value": 100
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "gauge",
+                          "mode": "lcd"
+                        }
+                      },
+                      {
+                        "id": "thresholds",
+                        "value": {
+                          "mode": "absolute",
+                          "steps": [
+                            {
+                              "color": "green",
+                              "value": null
+                            },
+                            {
+                              "color": "orange",
+                              "value": 80
+                            },
+                            {
+                              "color": "red",
+                              "value": 90
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
               },
               "options": {
-                "legend": {
-                  "displayMode": "table",
-                  "placement": "bottom",
-                  "showLegend": true,
-                  "calcs": [
-                    "lastNotNull",
-                    "max"
-                  ]
-                },
-                "tooltip": {
-                  "mode": "multi",
-                  "sort": "none"
-                }
+                "cellHeight": "md",
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": true,
+                    "displayName": "Used (%)"
+                  }
+                ]
               }
-            },
-            "version": "13.0.2"
+            }
           }
         }
       }
@@ -1593,23 +2797,10 @@
                 "kind": "ElementReference",
                 "name": "panel-1"
               },
-              "height": 8,
-              "width": 8,
               "x": 0,
-              "y": 0
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-2"
-              },
-              "height": 8,
-              "width": 8,
-              "x": 8,
-              "y": 0
+              "y": 0,
+              "width": 24,
+              "height": 2
             }
           },
           {
@@ -1619,10 +2810,10 @@
                 "kind": "ElementReference",
                 "name": "panel-3"
               },
-              "height": 8,
-              "width": 8,
-              "x": 16,
-              "y": 0
+              "x": 0,
+              "y": 2,
+              "width": 4,
+              "height": 6
             }
           },
           {
@@ -1632,49 +2823,10 @@
                 "kind": "ElementReference",
                 "name": "panel-4"
               },
-              "height": 8,
-              "width": 12,
-              "x": 0,
-              "y": 8
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-5"
-              },
-              "height": 8,
-              "width": 12,
-              "x": 12,
-              "y": 8
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-6"
-              },
-              "height": 8,
-              "width": 24,
-              "x": 0,
-              "y": 16
-            }
-          },
-          {
-            "kind": "GridLayoutItem",
-            "spec": {
-              "element": {
-                "kind": "ElementReference",
-                "name": "panel-7"
-              },
-              "height": 8,
-              "width": 12,
-              "x": 0,
-              "y": 24
+              "x": 4,
+              "y": 2,
+              "width": 4,
+              "height": 6
             }
           },
           {
@@ -1684,10 +2836,49 @@
                 "kind": "ElementReference",
                 "name": "panel-8"
               },
-              "height": 8,
-              "width": 12,
+              "x": 8,
+              "y": 2,
+              "width": 4,
+              "height": 6
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-22"
+              },
               "x": 12,
-              "y": 24
+              "y": 2,
+              "width": 4,
+              "height": 6
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-23"
+              },
+              "x": 16,
+              "y": 2,
+              "width": 4,
+              "height": 6
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-5"
+              },
+              "x": 20,
+              "y": 2,
+              "width": 4,
+              "height": 6
             }
           },
           {
@@ -1697,10 +2888,10 @@
                 "kind": "ElementReference",
                 "name": "panel-9"
               },
-              "height": 8,
-              "width": 24,
               "x": 0,
-              "y": 32
+              "y": 8,
+              "width": 4,
+              "height": 6
             }
           },
           {
@@ -1710,10 +2901,10 @@
                 "kind": "ElementReference",
                 "name": "panel-10"
               },
-              "height": 8,
-              "width": 12,
-              "x": 0,
-              "y": 40
+              "x": 4,
+              "y": 8,
+              "width": 4,
+              "height": 6
             }
           },
           {
@@ -1721,12 +2912,155 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
-                "name": "panel-11"
+                "name": "panel-24"
               },
-              "height": 8,
-              "width": 12,
+              "x": 8,
+              "y": 8,
+              "width": 4,
+              "height": 6
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-25"
+              },
               "x": 12,
-              "y": 40
+              "y": 8,
+              "width": 4,
+              "height": 6
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-2"
+              },
+              "x": 16,
+              "y": 8,
+              "width": 4,
+              "height": 6
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-26"
+              },
+              "x": 20,
+              "y": 8,
+              "width": 4,
+              "height": 6
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-32"
+              },
+              "x": 0,
+              "y": 14,
+              "width": 24,
+              "height": 2
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-33"
+              },
+              "x": 0,
+              "y": 16,
+              "width": 12,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-34"
+              },
+              "x": 12,
+              "y": 16,
+              "width": 12,
+              "height": 9
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-27"
+              },
+              "x": 0,
+              "y": 25,
+              "width": 24,
+              "height": 2
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-6"
+              },
+              "x": 0,
+              "y": 27,
+              "width": 12,
+              "height": 7
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-28"
+              },
+              "x": 12,
+              "y": 27,
+              "width": 6,
+              "height": 7
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-29"
+              },
+              "x": 18,
+              "y": 27,
+              "width": 6,
+              "height": 7
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-30"
+              },
+              "x": 0,
+              "y": 34,
+              "width": 24,
+              "height": 2
             }
           },
           {
@@ -1736,10 +3070,10 @@
                 "kind": "ElementReference",
                 "name": "panel-12"
               },
-              "height": 8,
-              "width": 8,
               "x": 0,
-              "y": 48
+              "y": 36,
+              "width": 10,
+              "height": 8
             }
           },
           {
@@ -1749,10 +3083,10 @@
                 "kind": "ElementReference",
                 "name": "panel-13"
               },
-              "height": 8,
-              "width": 8,
-              "x": 8,
-              "y": 48
+              "x": 10,
+              "y": 36,
+              "width": 14,
+              "height": 8
             }
           },
           {
@@ -1762,10 +3096,10 @@
                 "kind": "ElementReference",
                 "name": "panel-14"
               },
-              "height": 8,
-              "width": 8,
-              "x": 16,
-              "y": 48
+              "x": 0,
+              "y": 44,
+              "width": 24,
+              "height": 7
             }
           },
           {
@@ -1773,12 +3107,12 @@
             "spec": {
               "element": {
                 "kind": "ElementReference",
-                "name": "panel-15"
+                "name": "panel-31"
               },
-              "height": 8,
-              "width": 12,
               "x": 0,
-              "y": 56
+              "y": 51,
+              "width": 24,
+              "height": 2
             }
           },
           {
@@ -1788,10 +3122,10 @@
                 "kind": "ElementReference",
                 "name": "panel-16"
               },
-              "height": 8,
-              "width": 12,
-              "x": 12,
-              "y": 56
+              "x": 0,
+              "y": 53,
+              "width": 15,
+              "height": 8
             }
           },
           {
@@ -1801,10 +3135,62 @@
                 "kind": "ElementReference",
                 "name": "panel-17"
               },
-              "height": 8,
-              "width": 24,
+              "x": 15,
+              "y": 53,
+              "width": 9,
+              "height": 8
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-18"
+              },
               "x": 0,
-              "y": 64
+              "y": 61,
+              "width": 8,
+              "height": 6
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-19"
+              },
+              "x": 8,
+              "y": 61,
+              "width": 8,
+              "height": 6
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-20"
+              },
+              "x": 16,
+              "y": 61,
+              "width": 8,
+              "height": 6
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-21"
+              },
+              "x": 0,
+              "y": 67,
+              "width": 24,
+              "height": 8
             }
           }
         ]
@@ -1815,9 +3201,17 @@
     "preload": false,
     "tags": [
       "windows",
-      "servers",
-      "health",
-      "icmp"
+      "server-health",
+      "cpu",
+      "memory",
+      "gpu",
+      "storage",
+      "network",
+      "icmp",
+      "overview",
+      "at-a-glance",
+      "single-host",
+      "fleet-drilldown"
     ],
     "timeSettings": {
       "autoRefresh": "30s",
@@ -1839,17 +3233,17 @@
       {
         "kind": "QueryVariable",
         "spec": {
-          "allValue": ".*",
+          "allValue": "",
           "allowCustomValue": false,
           "current": {
-            "text": "All",
-            "value": "$__all"
+            "text": "Dans-PC",
+            "value": "Dans-PC"
           },
           "definition": "label_values(up{job=\"windows-servers\"},host)",
           "hide": "dontHide",
-          "includeAll": true,
+          "includeAll": false,
           "label": "Host",
-          "multi": true,
+          "multi": false,
           "name": "host",
           "options": [],
           "query": {
@@ -1861,6 +3255,42 @@
             "spec": {
               "qryType": 1,
               "query": "label_values(up{job=\"windows-servers\"},host)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            },
+            "version": "v0"
+          },
+          "refresh": "onDashboardLoad",
+          "regex": "",
+          "regexApplyTo": "value",
+          "skipUrlSync": false,
+          "sort": "alphabeticalAsc"
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "allValue": "",
+          "allowCustomValue": false,
+          "current": {
+            "text": "C:",
+            "value": "C:"
+          },
+          "definition": "label_values(windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"},volume)",
+          "hide": "dontHide",
+          "includeAll": false,
+          "label": "Volume",
+          "multi": false,
+          "name": "volume",
+          "options": [],
+          "query": {
+            "datasource": {
+              "name": "prometheus"
+            },
+            "group": "prometheus",
+            "kind": "DataQuery",
+            "spec": {
+              "qryType": 1,
+              "query": "label_values(windows_logical_disk_size_bytes{job=\"windows-servers\",host=~\"$host\",volume=~\"[A-Za-z]:\"},volume)",
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
             },
             "version": "v0"
