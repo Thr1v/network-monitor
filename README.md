@@ -1,5 +1,5 @@
 # Network Monitor
-
+bleh
 Self-hosted network and Windows server monitoring with **Grafana, Prometheus, SNMP Exporter, Blackbox Exporter and Windows Exporter**. It provides dashboards for switch traffic/errors, website availability, server resource health, and network reachability. The Docker stack runs on the monitoring PC; Windows servers expose metrics through a small Windows service on each host.
 
 > **Repository scope:** This repository contains the Docker stack, Prometheus and Blackbox configurations, alert rules, Grafana provisioning and dashboards. The database and additional locally developed features on the author's PC are **not committed, packaged or deployed by this repository**. Do not expect them to appear after cloning or pulling. No live server monitoring is active until targets are configured and exporters installed.
